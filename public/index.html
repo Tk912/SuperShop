@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>משווה – השוואת מחירים עד הבית</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="/" aria-label="דף הבית">משווה<span>.</span></a>
+    <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="suggestions">
+      <input id="q" type="search" autocomplete="off" placeholder="מה מחפשים? למשל: אוזניות סוני, אייפון 17, dyson…"
+             aria-autocomplete="list" aria-controls="suggestions" />
+      <ul id="suggestions" role="listbox" hidden></ul>
+    </div>
+  </header>
+
+  <section class="clubs-bar">
+    <span class="clubs-title">המועדונים שלי:</span>
+    <div id="clubs" class="chips"></div>
+  </section>
+
+  <main id="main">
+    <section class="hero">
+      <h1>המחיר האמיתי, עד הדלת</h1>
+      <p>משווים חנויות בישראל ובחו"ל, כולל הנחות מועדון, קופונים, משלוח, מע"מ ומכס, וגם שילוח צד ג' כשהחנות לא שולחת לארץ.</p>
+      <div id="popular" class="popular"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    המחירים, ההנחות והקופונים בגרסה זו הם <b>נתוני דוגמה</b> עד שמחברים ספקי מידע חיים. חישוב המסים הוא הערכה בלבד ואינו ייעוץ מס.
+    <span id="fxinfo"></span>
+  </footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

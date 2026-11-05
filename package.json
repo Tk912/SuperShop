@@ -1,0 +1,14 @@
+{
+  "name": "mashve",
+  "version": "1.0.0",
+  "description": "השוואת מחירים עד הבית – ישראל וחו\"ל",
+  "scripts": {
+    "test": "FX_OFFLINE=1 node --test test/*.test.js",
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "type": "module"
+}
