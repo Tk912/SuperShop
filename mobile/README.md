@@ -1,0 +1,29 @@
+# משווה – אפליקציית מובייל (iOS + Android)
+
+אפליקציית Expo (React Native) שמתחברת לשרת שבתיקייה הראשית (`../server`). כל חישובי המחיר, ההנחות, המשלוח והמסים נעשים בשרת.
+
+## הרצה
+```bash
+# טרמינל 1 – השרת (מתיקיית השורש)
+npm start
+# טרמינל 2 – האפליקציה
+cd mobile && npm install && npx expo start
+```
+סורקים את קוד ה-QR באפליקציית Expo Go בטלפון. הטלפון והמחשב צריכים להיות באותה רשת.
+האפליקציה פונה אוטומטית לשרת שבפורט 3000 על המחשב שמריץ את Expo. אפשר גם לקבוע כתובת אחרת:
+```bash
+EXPO_PUBLIC_API_URL=https://api.example.com npx expo start
+```
+
+## מבנה
+- `src/app/`: מסכים (Expo Router). דף הבית, תוצאות חיפוש, `product/[id]` להשוואה, ו-`clubs` לבחירת מועדונים.
+- `src/components/`: תיבת חיפוש עם השלמה אוטומטית, כרטיס הצעה, רשת מוצרים, שבבי מועדונים.
+- `src/lib/`: לקוח API, ערכת צבעים (בהיר/כהה), שמירת המועדונים במכשיר (AsyncStorage).
+- כיווניות RTL נכפית דרך התוסף `expo-localization` (`forcesRTL`) בקובץ `app.json`.
+
+## בנייה לחנויות
+```bash
+npx eas-cli@latest build --platform all
+npx eas-cli@latest submit
+```
+דרוש חשבון Expo, וגם חשבון מפתח של Apple ($99 לשנה) ושל Google Play ($25 חד-פעמי).

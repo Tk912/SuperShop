@@ -21,6 +21,8 @@ const productView = (p) => ({
 
 export function createApp() {
   const app = express();
+  // CORS – לאפליקציית המובייל (Expo web / dev) שרצה על פורט אחר
+  app.use('/api', (_req, res, next) => { res.set('Access-Control-Allow-Origin', '*'); next(); });
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.get('/img/:id.svg', (req, res) => {
