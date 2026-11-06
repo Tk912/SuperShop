@@ -66,6 +66,11 @@
     "scheme": "supershop",
     "description": "משווה – השוואת מחירים עד הבית: חנויות בישראל ובחו״ל, מועדוני הנחות, קופונים, משלוח ומסים.",
     "primaryColor": "#4338CA",
-    "owner": "ghostdogdev"
+    "owner": "ghostdogdev",
+    "extra": {
+      "eas": {
+        "projectId": "1eddc44e-11c2-4679-9a82-0507d876b16b"
+      }
+    }
   }
 }
