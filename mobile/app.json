@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mashve.app"
+      "bundleIdentifier": "com.ghostdogdev.supershop"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.mashve.app"
+      "package": "com.ghostdogdev.supershop"
     },
     "web": {
       "favicon": "./assets/favicon.png",
