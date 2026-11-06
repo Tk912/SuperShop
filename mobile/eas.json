@@ -7,16 +7,27 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://supershop-api-ufho3endrq-zf.a.run.app"
+      }
     },
     "preview": {
       "distribution": "internal",
       "environment": "preview",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://supershop-api-ufho3endrq-zf.a.run.app"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://supershop-api-ufho3endrq-zf.a.run.app"
+      }
     }
   },
   "submit": {

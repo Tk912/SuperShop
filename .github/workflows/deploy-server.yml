@@ -76,5 +76,13 @@ jobs:
         env:
           URL: ${{ steps.deploy.outputs.url }}
         run: |
-          curl -fsS "$URL/api/meta" | head -c 300; echo
+          curl -fsS "$URL/api/meta" | jq -e '.mode == "live" and (.clubs | length) > 0' > /dev/null
+          # חיפוש אמיתי (SearchApi) – התוצאה נשמרת במטמון ב-Firestore, כך שבפריסות הבאות זה לא עולה בקשה נוספת
+          curl -fsS "$URL/api/search?q=airpods%20pro%203" -o search.json
+          jq -e '(.errors | length) == 0 and ([.results[] | select(.live)] | length) > 0' search.json > /dev/null
+          ID=$(jq -r '[.results[] | select(.live)][0].id' search.json)
+          # דף מוצר אמיתי: חנויות עם מחיר עד הבית; גם רושם היסטוריית מחירים ב-Firestore
+          curl -fsS "$URL/api/products/$(jq -rn --arg id "$ID" '$id|@uri')/offers" -o offers.json
+          jq -e '(.offers | length) > 0 and .history != null' offers.json > /dev/null
+          jq -r '"מוצר: \(.product.name) · \(.offers | length) חנויות · הכי זול עד הבית: ₪\(.offers[0].totalIls | floor) ב-\(.offers[0].storeName)"' offers.json | tee -a "$GITHUB_STEP_SUMMARY"
           echo "### השרת פעיל: $URL" >> "$GITHUB_STEP_SUMMARY"

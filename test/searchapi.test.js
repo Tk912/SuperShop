@@ -37,6 +37,7 @@ test('חיפוש אמיתי: מחירים בשקלים, חנויות ישראל�
   assert.ok(live.every((p) => p.fromCurrency === 'ILS' && p.fromPrice > 500));
   assert.ok(live.every((p) => p.image.startsWith('https://')));
   assert.ok(live.some((p) => p.fromStore === 'KSP'));
+  assert.ok(live.every((p) => p.live === true)); // מסומנים כתוצאות חיות
 });
 
 test('דף מוצר אמיתי: KSP, באג וסופר-פארם עם דמי משלוח מהחנות', async () => {

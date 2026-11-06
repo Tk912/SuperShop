@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const productView = (p) => ({
   id: p.id, name: p.name, brand: p.brand, category: p.category, weightKg: p.weightKg,
-  weightEstimated: !!p.weightEstimated, image: p.image ?? `/img/${p.id}.svg`, live: p.source === 'serpapi',
+  weightEstimated: !!p.weightEstimated, image: p.image ?? `/img/${p.id}.svg`, live: p.source === 'serpapi' || p.source === 'searchapi',
   fromPrice: p.fromPrice, fromCurrency: p.fromCurrency, fromStore: p.fromStore, rating: p.rating, reviews: p.reviews,
 });
 
