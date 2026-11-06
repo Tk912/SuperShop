@@ -1,0 +1,18 @@
+# הפעלה ידנית של בדיקת התראות המחיר (בלי לחכות לבדיקה האוטומטית כל 6 שעות).
+# Actions → Check price alerts now → Run workflow
+name: Check price alerts now
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the price-alert check on the server
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          curl -fsS -X POST "https://supershop-api-ufho3endrq-zf.a.run.app/api/admin/check-alerts" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | tee result.json; echo
+          jq -r '"נבדקו \(.products) מוצרים · נשלחו \(.sent) התראות · שגיאות: \(.errors | length)"' result.json | tee -a "$GITHUB_STEP_SUMMARY"
