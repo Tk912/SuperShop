@@ -108,3 +108,48 @@ test('שלושת המקורות קיימים עם זכאות וקישורים, �
   d.clubs[1].sources[0].url = 'http://insecure.example';
   assert.equal((await putDeals(d)).status, 400);
 });
+
+test('חיבור למועדונים: רשימה, סנכרון הטבות מאומתות בלבד, שליחת הטבה לבדיקה', async () => {
+  // מאמתים הטבה אחת של פיס פלוס
+  const d = await getDeals();
+  d.clubs.find((c) => c.id === 'pais-plus').rules.push({ id: 'pais-ksp-test', storeId: 'ksp', type: 'percent', value: 4,
+    status: 'verified', source: 'https://www.pais.co.il/benefit-example', expires: null });
+  d.clubs.find((c) => c.id === 'pais-plus').rules.push({ id: 'pais-bug-pending', storeId: 'bug', type: 'percent', value: 9,
+    status: 'pending', source: null, expires: null });
+  assert.equal((await putDeals(d)).status, 200);
+
+  const list = await fetch(base + '/api/clubs').then((r) => r.json());
+  const pais = list.clubs.find((c) => c.id === 'pais-plus');
+  assert.equal(pais.benefitsCount, 1); // הממתינה לא נספרת
+  assert.deepEqual(pais.stores, ['KSP']);
+  assert.ok(pais.sources.length >= 1 && pais.eligibility);
+
+  const sync = await fetch(base + '/api/clubs/pais-plus/benefits').then((r) => r.json());
+  assert.equal(sync.benefits.length, 1);
+  assert.deepEqual({ store: sync.benefits[0].storeName, label: sync.benefits[0].label, status: sync.benefits[0].status },
+    { store: 'KSP', label: '4% הנחה', status: 'verified' });
+  assert.match(sync.benefits[0].verifiedAt, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal((await fetch(base + '/api/clubs/no-such/benefits')).status, 404);
+
+  // שליחת הטבה: נשמרת כהצעה לבדיקה, לא חלה על מחירים
+  const send = (body) => fetch(base + '/api/clubs/police-funds/suggestions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  assert.equal((await send({ store: '', discount: '10%' })).status, 400);
+  assert.equal((await send({ store: 'Ivory', discount: '7%', link: 'http://insecure' })).status, 400);
+  const ok = await send({ store: 'Ivory', discount: '7% על אוזניות', link: 'https://example.org/benefit', note: 'ראיתי באתר המועדון' }).then((r) => r.json());
+  assert.ok(ok.ok);
+  const after = await getDeals();
+  assert.equal(after.suggestions[0].clubId, 'police-funds');
+  assert.equal(after.suggestions[0].store, 'Ivory');
+  assert.equal((await fetch(base + '/api/clubs').then((r) => r.json())).clubs.find((c) => c.id === 'police-funds').benefitsCount, 0);
+
+  // מגבלה יומית: 5 הצעות למשתמש
+  for (let i = 0; i < 4; i++) await send({ store: `S${i}`, discount: '1%' });
+  assert.equal((await send({ store: 'S9', discount: '1%' })).status, 429);
+
+  // מנהל מוחק הצעה; שמירת ההנחות לא מוחקת הצעות אחרות
+  const del = await fetch(`${base}/api/admin/suggestions/${ok.id}`, { method: 'DELETE', headers: H }).then((r) => r.json());
+  assert.equal(del.removed, 1);
+  const d2 = await getDeals();
+  assert.equal((await putDeals(d2)).status, 200);
+  assert.equal((await getDeals()).suggestions.length, 4);
+});

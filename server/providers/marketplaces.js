@@ -6,6 +6,7 @@
 //   2. חדש בלבד: בלי Renewed/Refurbished/Restored/Open Box/Used.
 //   3. לא אביזר: בלי "for AirPods", case, cover, tips...
 //   4. מחיר סביר ביחס למחיר בחנויות בישראל (Google Shopping): לא זול מדי (חשד לזיוף) ולא יקר מדי.
+//   5. eBay: מוכר עם היסטוריה – לפחות 50 ביקורות ו-97% חיוביות (בנתונים אמיתיים, המחירים ה"זולים" באו ממוכרים בלי היסטוריה).
 // מכל אתר נלקחת ההצעה הזולה ביותר שעברה (מחיר + משלוח).
 //
 // MARKETPLACES=amazon,ebay,walmart (ברירת מחדל) קובע אילו אתרים נבדקים; MARKETPLACES=none מכבה.
@@ -71,6 +72,8 @@ const ENGINES = {
     params: (q) => ({ engine: 'ebay_search', q, ebay_domain: 'ebay.com', delivery_country: 'IL' }),
     map: (r) => ({
       price: r.extracted_price, currency: currencyOf(r.price, 'USD'), condition: r.condition,
+      trusted: (r.seller?.reviews ?? 0) >= 50 && (r.seller?.positive_feedback_percent ?? 0) >= 97,
+      sellerNote: r.seller?.name ? `מוכר: ${r.seller.name} · ${r.seller.positive_feedback_percent}% חיובי (${r.seller.reviews} ביקורות)` : null,
       ...(r.extracted_shipping != null ? { directShipping: [{ name: 'משלוח לישראל (eBay)', cost: r.extracted_shipping, days: '?' }] }
         : /free/i.test(r.shipping ?? '') ? { directShipping: [{ name: 'משלוח חינם לישראל (eBay)', cost: 0, days: '?' }] } : {}),
     }),
@@ -95,7 +98,7 @@ export function pickBest(results, key, tokens, referenceIls, rates = getRates().
     if (r.extracted_price == null || !r.link || !r.title) continue;
     const m = eng.map(r);
     if (!sameProduct(r.title, tokens, m.condition ?? '')) continue;
-    if (m.inStock === false) continue;
+    if (m.inStock === false || m.trusted === false) continue;
     const priceIls = toIls(m.price, m.currency, rates);
     if (referenceIls && (priceIls < referenceIls * PRICE_BAND[0] || priceIls > referenceIls * PRICE_BAND[1])) continue;
     const shipIls = m.directShipping ? toIls(m.directShipping[0].cost, m.currency, rates) : null;
@@ -111,7 +114,7 @@ export function pickBest(results, key, tokens, referenceIls, rates = getRates().
   const { r, m } = best;
   return {
     storeId: eng.store, price: m.price, currency: m.currency, url: r.link, title: r.title, source: key,
-    inStock: true, details: [m.condition].filter(Boolean), ...(m.directShipping ? { directShipping: m.directShipping } : {}),
+    inStock: true, details: [m.condition, m.sellerNote].filter(Boolean), ...(m.directShipping ? { directShipping: m.directShipping } : {}),
   };
 }
 

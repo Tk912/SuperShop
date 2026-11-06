@@ -12,6 +12,7 @@ const rates = { ILS: 1, USD: 3.7, EUR: 4.0, GBP: 4.7, CNY: 0.51 };
 const AIRPODS = 'אוזניות Apple AirPods Pro 3';
 const tokens = modelTokens(AIRPODS);
 const REF = 717; // המחיר הזול בישראל (אייבורי, Google Shopping)
+const GOOD = { name: 'good-seller', reviews: 500, positive_feedback_percent: 99.5 };
 
 test('שאילתה באנגלית ומילות דגם מתוך שם בעברית', () => {
   assert.equal(englishQuery(AIRPODS), 'apple airpods pro 3');
@@ -37,13 +38,14 @@ test('Amazon: אין התאמה אמיתית בתוצאות (דורות קודמ
   assert.equal(pickBest(fixture('amazon_search'), 'amazon', tokens, REF, rates), null);
 });
 
-test('eBay: מחירים חשודים ומשומשים מסוננים; נבחרת הזולה כולל משלוח לישראל', () => {
+test('eBay: מוכרים בלי היסטוריה, מחירים חשודים ומשומשים מסוננים; נבחרת הזולה כולל משלוח', () => {
   const o = pickBest(fixture('ebay_search'), 'ebay', tokens, REF, rates);
   assert.equal(o.storeId, 'ebay');
-  // $173.89 עם "Free International Shipping" זול מ-$144.99 + $29.60 משלוח; $17–85 (חשוד) ו-Pre-Owned נפסלו
-  assert.equal(o.price, 173.89);
+  // $173.89 (3 ביקורות, 0%) ו-$144.99 (0 ביקורות) נפסלים; נשארים $179 (67, 100%) ו-$193.07 (120, 100%)
+  assert.equal(o.price, 179);
   assert.equal(o.currency, 'USD');
-  assert.equal(o.directShipping[0].cost, 0);
+  assert.equal(o.directShipping[0].cost, 22.38);
+  assert.ok(o.details.some((d) => d.includes('100% חיובי')));
   assert.ok(o.url.startsWith('https://www.ebay.com/itm/'));
 });
 
@@ -67,8 +69,15 @@ test('אביזר מזוהה לפי המיקום: לפני שם המוצר – א
 
 test('משלוח לא ידוע לא נחשב חינם בבחירת הזולה', () => {
   const rs = [
-    { title: 'Apple AirPods Pro 3', link: 'https://x/1', price: '$170.00', extracted_price: 170 }, // משלוח לא ידוע
-    { title: 'Apple AirPods Pro 3', link: 'https://x/2', price: '$150.00', extracted_price: 150, extracted_shipping: 25 },
+    { title: 'Apple AirPods Pro 3', link: 'https://x/1', price: '$170.00', extracted_price: 170, seller: GOOD }, // משלוח לא ידוע
+    { title: 'Apple AirPods Pro 3', link: 'https://x/2', price: '$150.00', extracted_price: 150, extracted_shipping: 25, seller: GOOD },
   ];
   assert.equal(pickBest(rs, 'ebay', tokens, REF, rates).price, 150); // 150+25 < 170+25
+});
+
+test('eBay: מוכר בלי מספיק ביקורות או עם דירוג נמוך נפסל', () => {
+  const base = { title: 'Apple AirPods Pro 3', link: 'https://x/1', price: '$190.00', extracted_price: 190, extracted_shipping: 20 };
+  assert.equal(pickBest([{ ...base, seller: { name: 'new', reviews: 3, positive_feedback_percent: 100 } }], 'ebay', tokens, REF, rates), null);
+  assert.equal(pickBest([{ ...base, seller: { name: 'meh', reviews: 900, positive_feedback_percent: 94 } }], 'ebay', tokens, REF, rates), null);
+  assert.ok(pickBest([{ ...base, seller: GOOD }], 'ebay', tokens, REF, rates));
 });

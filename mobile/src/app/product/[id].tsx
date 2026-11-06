@@ -66,16 +66,15 @@ export default function Product() {
 
       <PriceWatch key={data.product.id} data={data} />
 
-      {data.deals ? (
-        <Link href="/clubs" asChild>
-          <Pressable style={StyleSheet.flatten([styles.clubsBtn, { borderColor: t.line, backgroundColor: t.card }])}>
-            <Text style={{ color: t.ink }}>🎖️ המועדונים שלי: {myClubs.length ? `${myClubs.length} פעילים` : 'לא נבחרו'}</Text>
-            <Text style={{ color: t.brand }}>עריכה</Text>
-          </Pressable>
-        </Link>
-      ) : (
-        <Text style={{ color: t.muted, fontSize: 13 }}>🎖️ הנחות מועדונים וקופונים עוד לא מחושבות במחירים האמיתיים – בקרוב.</Text>
-      )}
+      <Link href="/clubs" asChild>
+        <Pressable style={StyleSheet.flatten([styles.clubsBtn, { borderColor: t.line, backgroundColor: t.card }])}>
+          <Text style={{ color: t.ink, flex: 1 }}>
+            🎖️ {myClubs.length ? `${myClubs.length} מועדונים מחוברים` : 'חברים במועדון הטבות? חברו אותו'}
+            {data.deals ? '' : ' · הטבות מאומתות יחושבו כאן במחיר'}
+          </Text>
+          <Text style={{ color: t.brand }}>{myClubs.length ? 'ניהול' : 'חיבור'}</Text>
+        </Pressable>
+      </Link>
 
       {data.errors.length > 0 && <Text style={{ color: t.warn }}>חלק מהספקים לא הגיבו: {data.errors.map((e) => e.provider).join(', ')}</Text>}
 

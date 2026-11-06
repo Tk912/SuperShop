@@ -38,6 +38,13 @@ export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors:
 export type SearchResponse = { results: ProductSummary[]; mode: DataMode; errors: ProviderError[] };
 export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode; deals: boolean };
 
+export type ClubSource = { label: string; url: string; access?: 'login' | 'public' | 'card' };
+export type ClubInfo = { id: string; name: string; description: string; eligibility: string | null; payment: string | null;
+  sources: ClubSource[]; primary: boolean; benefitsCount: number; stores: string[] };
+export type ClubBenefit = { id: string; storeId: string; storeName: string; label: string; minSpend: number | null;
+  stackableWithCoupon: boolean; expires: string | null; status: DealStatus; source: string | null; verifiedAt: string | null; note: string | null };
+export type BenefitSuggestion = { store: string; discount: string; link?: string; note?: string };
+
 export type Watch = { productId: string; productName: string; targetIls: number | null; baselineIls: number | null; lastNotifiedIls: number | null };
 
 async function send<T>(method: 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T> {
@@ -64,6 +71,16 @@ export const api = {
     send<{ watch: Watch }>('PUT', '/api/watches', { pushToken, ...w }),
   deleteWatch: (pushToken: string, productId: string) =>
     send<{ removed: number }>('DELETE', `/api/watches?pushToken=${encodeURIComponent(pushToken)}&productId=${encodeURIComponent(productId)}`),
+  clubs: () => get<{ clubs: ClubInfo[]; mode: DataMode }>('/api/clubs'),
+  clubBenefits: (clubId: string) =>
+    get<{ benefits: ClubBenefit[]; syncedAt: string; mode: DataMode }>(`/api/clubs/${encodeURIComponent(clubId)}/benefits`),
+  suggestBenefit: async (clubId: string, body: BenefitSuggestion) => {
+    const res = await fetch(`${API_URL}/api/clubs/${encodeURIComponent(clubId)}/suggestions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(res.status === 429 ? 'אפשר לשלוח עד 5 הטבות ביום' : (j.error ?? `שגיאת שרת (${res.status})`));
+  },
   reportDeal: async (dealId: string) => {
     const res = await fetch(`${API_URL}/api/deals/${encodeURIComponent(dealId)}/report`, { method: 'POST' });
     if (!res.ok) throw new Error(`שגיאת שרת (${res.status})`);

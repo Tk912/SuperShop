@@ -37,7 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: 'SuperShop' }} />
         <Stack.Screen name="search" options={{ title: 'תוצאות חיפוש' }} />
         <Stack.Screen name="product/[id]" options={{ title: 'השוואת מחירים' }} />
-        <Stack.Screen name="clubs" options={{ title: 'המועדונים שלי', presentation: 'modal' }} />
+        <Stack.Screen name="clubs" options={{ title: 'חיבור למועדונים' }} />
         <Stack.Screen name="favorites" options={{ title: 'במעקב מחיר' }} />
         <Stack.Screen name="scan" options={{ title: 'סריקת ברקוד', presentation: 'fullScreenModal' }} />
       </Stack>

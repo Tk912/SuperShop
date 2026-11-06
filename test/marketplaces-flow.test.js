@@ -23,8 +23,11 @@ test('AirPods Pro 3: eBay ו-Walmart נמצאים, Amazon לא; Walmart מקבל
 
   const ev = Object.fromEntries(offers.map((o) => [o.storeId,
     evaluateOffer({ offer: o, product, store: storeById[o.storeId], rates, deals: false })]));
-  // eBay: משלוח חינם לישראל → מסלול ישיר; מעל $75 → מע"מ
-  assert.equal(ev.ebay.best.kind, 'direct');
+  // eBay: מסלול ישיר עם דמי המשלוח לישראל מהמודעה ($22.38), לצד שילוח צד ג' – ונבחר הזול; מעל $75 → מע"מ
+  const direct = ev.ebay.routes.find((r) => r.kind === 'direct');
+  assert.equal(direct.shippingIls, Math.round(22.38 * 3.7 * 100) / 100);
+  assert.ok(ev.ebay.routes.some((r) => r.kind === 'forwarder'));
+  assert.equal(ev.ebay.totalIls, Math.min(...ev.ebay.routes.map((r) => r.totalIls)));
   assert.ok(ev.ebay.best.taxes.vatIls > 0);
   // Walmart לא שולחת לישראל → רק שילוח צד ג'
   assert.ok(ev.walmart.routes.every((r) => r.kind === 'forwarder'));

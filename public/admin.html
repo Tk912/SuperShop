@@ -55,6 +55,7 @@
   </div>
   <div id="msg" role="status"></div>
   <div id="sources" class="sources" aria-label="מקורות ההנחות"></div>
+  <div id="suggestions"></div>
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="clubs" aria-selected="true">הנחות מועדונים</button>
     <button role="tab" data-tab="coupons" aria-selected="false">קופונים</button>
@@ -90,7 +91,11 @@ $('#save').onclick = async () => {
   const r = await api('PUT', { clubs: data.clubs, coupons: data.coupons });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) return msg('לא נשמר:\n' + (j.error ?? r.status).split('; ').join('\n'), false);
-  data = { ...data, ...j }; msg('נשמר. הנחות מאומתות חלות מעכשיו על מחירים אמיתיים.', true); render();
+  for (const id of data.pendingDismiss ?? []) {
+    await fetch('/api/admin/suggestions/' + encodeURIComponent(id), { method: 'DELETE', headers: { Authorization: 'Bearer ' + $('#token').value } });
+  }
+  data = { ...data, ...j, pendingDismiss: [], suggestions: (j.suggestions ?? []).filter((x) => !(data.pendingDismiss ?? []).includes(x.id)) };
+  msg('נשמר. הנחות מאומתות חלות מעכשיו על מחירים אמיתיים.', true); render();
 };
 
 document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => {
@@ -150,9 +155,43 @@ $('#sources').addEventListener('click', (e) => {
   $('#filter').value = 'all'; render(); msg(`נוספה שורה ל${club.name} בראש הטבלה: בחרו חנות וערך, ואמתו מול המקור.`, true);
 });
 
+// הטבות שחברי מועדונים שלחו מהאפליקציה – ממתינות לבדיקה
+function renderSuggestions() {
+  const list = data.suggestions ?? [];
+  const clubName = (id) => data.clubs.find((c) => c.id === id)?.name ?? id;
+  $('#suggestions').innerHTML = !list.length ? '' : `<div class="help"><b>הטבות שחברים שלחו (${list.length})</b>: בדקו מול המקור, ואז הוסיפו כהנחה או מחקו.
+    <div class="wrap" style="margin-top:8px"><table><thead><tr><th>מועדון</th><th>חנות</th><th>הטבה</th><th>קישור</th><th>הערה</th><th>נשלח</th><th></th></tr></thead><tbody>
+    ${list.map((s) => `<tr data-sg="${esc(s.id)}"><td>${esc(clubName(s.clubId))}</td><td>${esc(s.store)}</td><td>${esc(s.discount)}</td>
+      <td>${s.link ? `<a href="${esc(s.link)}" target="_blank" rel="noopener noreferrer">פתיחה</a>` : '–'}</td><td>${esc(s.note ?? '')}</td>
+      <td class="muted">${esc(s.at.slice(0, 10))}</td>
+      <td><button data-sg-add>+ להנחה</button> <button data-sg-del>מחיקה</button></td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+$('#suggestions').addEventListener('click', async (e) => {
+  const tr = e.target.closest('tr[data-sg]'); if (!tr) return;
+  const s = data.suggestions.find((x) => x.id === tr.dataset.sg);
+  if (e.target.matches('[data-sg-add]')) {
+    const club = data.clubs.find((c) => c.id === s.clubId);
+    const store = data.stores.find((st) => st.name.toLowerCase() === s.store.toLowerCase() || s.store.toLowerCase().includes(st.name.toLowerCase())) ?? data.stores[0];
+    const pct = Number((s.discount.match(/(\d+(?:\.\d+)?)\s*%/) ?? [])[1]);
+    club.rules.unshift({ id: `${club.id}-${Math.random().toString(36).slice(2, 8)}`, storeId: store.id, type: 'percent', value: pct || 5,
+      status: 'pending', source: s.link ?? club.sources?.[0]?.url ?? '', expires: null, stackableWithCoupon: false, note: `מהצעת חבר: ${s.discount}` });
+    tab = 'clubs'; $('#filter').value = 'all';
+    msg(`נוספה שורה ל${club.name} (${store.name}) בסטטוס "ממתין". אמתו מול המקור, סמנו "מאומת" ושמרו.`, true);
+    // ההצעה תימחק מהשרת רק אחרי שמירה מוצלחת – כדי שלא תלך לאיבוד אם לא שומרים
+    (data.pendingDismiss ??= []).push(s.id);
+    data.suggestions = data.suggestions.filter((x) => x.id !== s.id);
+    return render();
+  }
+  const r = await fetch('/api/admin/suggestions/' + encodeURIComponent(s.id), { method: 'DELETE', headers: { Authorization: 'Bearer ' + $('#token').value } });
+  if (r.ok) data.suggestions = data.suggestions.filter((x) => x.id !== s.id);
+  render();
+});
+
 function render() {
   if (!data) return;
   renderSources();
+  renderSuggestions();
   const head = tab === 'clubs'
     ? '<tr><th>מועדון</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>תקרה ₪</th><th>משתלב עם קופון</th></tr>'
     : '<tr><th>קוד</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>הנחה מקס׳</th><th>מטבע</th></tr>';

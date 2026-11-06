@@ -13,7 +13,8 @@ const STATUSES = ['sample', 'pending', 'verified'];
 
 // בפעם הראשונה (אין עדיין נתונים באחסון) מתחילים מהזרע שבקוד
 const store = doc('deals', () => JSON.parse(fs.readFileSync(SEED, 'utf8')), FILE);
-const D = () => { store.value.reports ??= {}; return store.value; }; // id → מספר דיווחים "לא עבד" מאז האימות האחרון
+// reports: id → מספר דיווחים "לא עבד" מאז האימות האחרון. suggestions: הטבות שחברי מועדון שלחו, ממתינות לבדיקה
+const D = () => { store.value.reports ??= {}; store.value.suggestions ??= []; return store.value; };
 
 // במצב קבצים לא דורסים את קובץ הזרע שבקוד, אלא אם ביקשו במפורש
 const writable = () => storageKind() !== 'file' || FILE !== SEED || process.env.DEALS_WRITE_SEED === '1';
@@ -75,7 +76,7 @@ export function saveDeals(next) {
       delete db.reports[d.id];
     }
   }
-  store.value = { _note: db._note, clubs: next.clubs, coupons: next.coupons, reports: db.reports };
+  store.value = { _note: db._note, clubs: next.clubs, coupons: next.coupons, reports: db.reports, suggestions: db.suggestions };
   persist();
   return store.value;
 }
@@ -88,4 +89,43 @@ export function reportDeal(id) {
   db.reports[id] = (db.reports[id] ?? 0) + 1;
   persist();
   return db.reports[id];
+}
+
+// ---------- חיבור למועדונים ----------
+// אין למועדונים ממשק לאפליקציות חיצוניות, ולכן "סנכרון" = ההטבות המאומתות של המועדון מהמאגר שלנו.
+// כשמועדון יספק פיד רשמי, הוא ייכנס כאן כמקור נוסף (ההטבות ממנו יסומנו verified עם המקור).
+
+const MAX_SUGGESTIONS = 500;
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
+
+/** הטבות פעילות של מועדון, לפי מסנן ההנחות הנוכחי (מאומתות בלבד על מחירים אמיתיים). */
+export function clubBenefits(clubId, filter) {
+  const club = D().clubs.find((c) => c.id === clubId);
+  if (!club) throw Object.assign(new Error('unknown club'), { status: 404 });
+  return club.rules.filter(filter);
+}
+
+/** חבר מועדון מדווח על הטבה שראה באתר המועדון. נשמרת לבדיקה בדף הניהול – לא חלה עד שמישהו מאמת. */
+export function suggestBenefit(clubId, body) {
+  const db = D();
+  if (!db.clubs.some((c) => c.id === clubId)) throw Object.assign(new Error('unknown club'), { status: 404 });
+  const store = clean(body?.store, 80);
+  const discount = clean(body?.discount, 120);
+  const link = clean(body?.link, 500);
+  if (!store || !discount) throw Object.assign(new Error('store and discount are required'), { status: 400 });
+  if (link && !/^https:\/\//.test(link)) throw Object.assign(new Error('link must start with https://'), { status: 400 });
+  const s = { id: `sg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, clubId, store, discount,
+    link: link || null, note: clean(body?.note, 300) || null, at: new Date().toISOString() };
+  db.suggestions.unshift(s);
+  db.suggestions.length = Math.min(db.suggestions.length, MAX_SUGGESTIONS);
+  persist();
+  return s;
+}
+
+export function dismissSuggestion(id) {
+  const db = D();
+  const before = db.suggestions.length;
+  db.suggestions = db.suggestions.filter((s) => s.id !== id);
+  persist();
+  return before - db.suggestions.length;
 }

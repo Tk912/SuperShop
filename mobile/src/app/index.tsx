@@ -46,7 +46,10 @@ export default function Home() {
       ) : (
         <>
           <View style={{ gap: 6 }}>
-            <Text style={[styles.label, { color: t.muted }]}>המועדונים שלי{meta.deals ? '' : ' · ההנחות יחושבו בקרוב'}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={[styles.label, { color: t.muted }]}>המועדונים שלי</Text>
+              <Link href="/clubs"><Text style={[styles.label, { color: t.brand }]}>חיבור וסנכרון הטבות ←</Text></Link>
+            </View>
             <ClubChips clubs={meta.clubs} />
           </View>
           <View style={{ gap: 10 }}>

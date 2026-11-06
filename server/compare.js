@@ -8,7 +8,7 @@ import { dealFilter as makeDealFilter, hasLiveDeals } from './deals.js';
 
 export const dataMode = () => (isLive() && process.env.FORCE_DEMO !== '1' ? 'live' : 'demo');
 // על מחירים אמיתיים חלות רק הנחות מאומתות ובתוקף (SAMPLE_DEALS=1 מפעיל גם את הדוגמאות – להדגמה בלבד).
-const currentFilter = () => makeDealFilter({ live: dataMode() === 'live', includeSamples: process.env.SAMPLE_DEALS === '1' });
+export const currentFilter = () => makeDealFilter({ live: dataMode() === 'live', includeSamples: process.env.SAMPLE_DEALS === '1' });
 /** האם יש בכלל הנחות פעילות – כדי שהאפליקציה תדע אם להציג את בחירת המועדונים. */
 export const dealsEnabled = () => dataMode() === 'demo' || process.env.SAMPLE_DEALS === '1' || hasLiveDeals();
 
