@@ -8,6 +8,10 @@ module.exports = ({ config }) => {
   const fromEas = process.env.GOOGLE_SERVICES_JSON;
   const local = path.join(__dirname, 'google-services.json');
   const googleServicesFile = fromEas ?? (fs.existsSync(local) ? './google-services.json' : undefined);
+  // בבניית Android ב-EAS בלי הקובץ – עוצרים עם הודעה ברורה, במקום אפליקציה שלא מקבלת התראות
+  if (process.env.EAS_BUILD_PLATFORM === 'android' && !googleServicesFile) {
+    throw new Error('GOOGLE_SERVICES_JSON is missing: add it on expo.dev (Environment variables, type File) for this build environment.');
+  }
   return {
     ...config,
     android: { ...config.android, ...(googleServicesFile ? { googleServicesFile } : {}) },
