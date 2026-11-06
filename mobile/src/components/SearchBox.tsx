@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api, imageUrl, type ProductSummary } from '../lib/api';
-import { catName, useTheme } from '../lib/theme';
+import { catName, RLM, useTheme } from '../lib/theme';
 
 // תיבת חיפוש עם השלמה אוטומטית ותמונות קטלוג.
 export function SearchBox({ initial = '', autoFocus = false }: { initial?: string; autoFocus?: boolean }) {
@@ -71,7 +71,7 @@ export function SearchBox({ initial = '', autoFocus = false }: { initial?: strin
               <Image source={{ uri: imageUrl(p.image) }} style={[styles.thumb, { backgroundColor: t.bg }]} contentFit="cover" />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.name, { color: t.ink }]} numberOfLines={1}>{p.name}</Text>
-                <Text style={{ color: t.muted, fontSize: 13 }}>{p.brand} · {catName(p.category)}</Text>
+                <Text style={{ color: t.muted, fontSize: 13 }}>{RLM}{p.brand} · {catName(p.category)}</Text>
               </View>
             </Pressable>
           ))}

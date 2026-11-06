@@ -19,6 +19,12 @@ const OFFERS_TTL = 6 * 60 * 60 * 1000;
 
 const SYMBOLS = [['₪', 'ILS'], ['ש"ח', 'ILS'], ['ש״ח', 'ILS'], ['ILS', 'ILS'], ['US$', 'USD'], ['$', 'USD'], ['€', 'EUR'], ['£', 'GBP']];
 
+/** תיאור המשלוח כפי שהחנות כתבה אותו ב-Google (למשל "משלוח חינם בין יום ב׳ לבין יום ד׳"). */
+export function shippingLabel(detailsArr) {
+  const line = [].concat(detailsArr ?? []).find((d) => /משלוח|delivery|shipping/i.test(d));
+  return (line ?? 'משלוח').replace(/[\u200e\u200f]/g, '').replace(/\u00a0/g, ' ').trim().slice(0, 60);
+}
+
 /** מזהה מטבע ממחרוזת מחיר כמו "₪1,449", "1,449.00 ₪" או "$2,199.99". */
 export function currencyOf(priceStr, fallback = 'ILS') {
   const s = String(priceStr ?? '');
@@ -62,9 +68,10 @@ export function toOffer(s) {
   const freeShip = /free delivery|free shipping|משלוח חינם/i.test(details);
   const shipCost = s.shipping_extracted ?? (freeShip ? 0 : undefined);
   return {
-    storeId: store.id, price: s.extracted_price, currency, url: s.link, title: s.title, source: 'serpapi',
+    storeId: store.id, storeHint: { name: s.name, url: s.link, currency },
+    price: s.extracted_price, currency, url: s.link, title: s.title, source: 'serpapi',
     inStock: !/out of stock|אזל/i.test(details), details: s.details_and_offers ?? [],
-    ...(shipCost != null ? { directShipping: [{ name: 'משלוח (לפי החנות)', cost: shipCost, days: '?' }] } : {}),
+    ...(shipCost != null ? { directShipping: [{ name: shippingLabel(s.details_and_offers), cost: shipCost, days: '?' }] } : {}),
   };
 }
 
@@ -95,7 +102,7 @@ export const serpapiProvider = {
       token = found.find((p) => p.pageToken)?.pageToken;
       if (!token) return [];
     }
-    return cached(`serp:offers:${token}`, OFFERS_TTL, async () => {
+    return cached(`serp:offers:v2:${token}`, OFFERS_TTL, async () => {
       const json = await serpFetch({ engine: 'google_immersive_product', page_token: token, gl: 'il', hl: 'iw' }, opts);
       return (json.product_results?.stores ?? []).filter((s) => s.extracted_price != null && s.link).map(toOffer);
     });

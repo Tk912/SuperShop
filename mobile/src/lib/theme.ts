@@ -13,6 +13,9 @@ const dark: typeof light = {
 export type Theme = typeof light;
 export const useTheme = (): Theme => (useColorScheme() === 'dark' ? dark : light);
 
+// סימן כיוון מימין לשמאל: שורה שמתחילה באנגלית (למשל שם מותג) לא תהפוך את סדר החלקים
+export const RLM = '\u200f';
+
 export const ils = (n: number) => '₪' + Math.round(n).toLocaleString('he-IL');
 export const money = (n: number, cur: string) =>
   new Intl.NumberFormat('he-IL', { style: 'currency', currency: cur, maximumFractionDigits: cur === 'ILS' ? 0 : 2 }).format(n);

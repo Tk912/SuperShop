@@ -119,7 +119,7 @@ export function evaluateOffer({ offer, product, store, rates, userClubIds = [], 
       const taxes = store.type === 'intl'
         ? importTaxes(itemIls, shipIls, product.category, rates)
         : { totalIls: 0, exempt: true, vatIls: 0, dutyIls: 0, feeIls: 0 };
-      routes.push({ kind: 'direct', name: opt.name, days: opt.days, shippingIls: round2(shipIls), taxes,
+      routes.push({ kind: 'direct', name: opt.name, days: opt.days, shippingIls: round2(shipIls), taxes, shippingUnknown: !!opt.unknown,
         totalIls: round2(itemIls + shipIls + taxes.totalIls) });
     }
   }

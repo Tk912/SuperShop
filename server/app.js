@@ -8,7 +8,10 @@ import { forwarders } from './data/forwarders.js';
 import { searchCatalog } from './search/catalogSearch.js';
 import { productSvg } from './images.js';
 import { collectOffers, activeProviders, searchLiveProducts, isLive } from './providers/index.js';
-import { getStore } from './storeRegistry.js';
+import { getStore as getKnownStore, resolveStore } from './storeRegistry.js';
+
+// חנות לפי מזהה; חנות אד-הוק שנשכחה (הפעלה מחדש + הצעות מהמטמון) משוחזרת מפרטי ההצעה
+const storeFor = (offer) => getKnownStore(offer.storeId) ?? (offer.storeHint ? resolveStore(offer.storeHint) : undefined);
 import { evaluateOffer, missedClubSavings } from './pricing/landedCost.js';
 import { getRates, refreshRates } from './pricing/fx.js';
 import { taxConfig } from './pricing/taxConfig.js';
@@ -68,7 +71,7 @@ export function createApp() {
 
     const evaluated = offers
       .map((offer) => {
-        const store = getStore(offer.storeId);
+        const store = storeFor(offer);
         if (!store) return null;
         const deals = dealsEnabled();
         const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals });
@@ -84,8 +87,8 @@ export function createApp() {
     // ההיסטוריה נרשמת לפי מחיר בסיס (בלי הנחות מועדון אישיות) – כדי שתהיה זהה לכל המשתמשים
     if (dataMode() === 'live') {
       const base = offers
-        .filter((o) => o.inStock !== false && getStore(o.storeId))
-        .map((offer) => evaluateOffer({ offer, product, store: getStore(offer.storeId), rates, userClubIds: [] }))
+        .filter((o) => o.inStock !== false && storeFor(o))
+        .map((offer) => evaluateOffer({ offer, product, store: storeFor(offer), rates, userClubIds: [], deals: dealsEnabled() }))
         .filter((e) => e.totalIls != null)
         .sort((a, b) => a.totalIls - b.totalIls)[0];
       if (base) recordPrice(product.id, base.totalIls, base.storeName);

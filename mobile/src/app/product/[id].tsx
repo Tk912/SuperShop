@@ -7,7 +7,7 @@ import { OfferCard } from '../../components/OfferCard';
 import { PriceWatch } from '../../components/PriceWatch';
 import { api, imageUrl, type OffersResponse } from '../../lib/api';
 import { useClubs } from '../../lib/clubs';
-import { catName, ils, useTheme } from '../../lib/theme';
+import { catName, ils, RLM, useTheme } from '../../lib/theme';
 
 type Filter = 'all' | 'local' | 'intl';
 const FILTERS: [Filter, string][] = [['all', 'הכל'], ['local', 'ישראל'], ['intl', 'חו״ל']];
@@ -46,7 +46,7 @@ export default function Product() {
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={[styles.title, { color: t.ink }]}>{data.product.name}</Text>
           <Text style={{ color: t.muted, fontSize: 13 }}>
-            {data.product.brand} · {catName(data.product.category)} · {data.product.weightEstimated ? 'משקל משוער' : 'משקל'} ~{data.product.weightKg} ק״ג · {data.offers.length} הצעות
+            {RLM}{data.product.brand} · {catName(data.product.category)} · {data.product.weightEstimated ? 'משקל משוער' : 'משקל'} ~{data.product.weightKg} ק״ג · {data.offers.length} הצעות
           </Text>
         </View>
       </View>

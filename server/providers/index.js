@@ -2,12 +2,15 @@
 // כשיש ספק חי פעיל, מחירי הדוגמה כבויים – כדי לא לערבב מחירים אמיתיים עם מומצאים (FORCE_DEMO=1 מחזיר אותם).
 import { demoProvider } from './demo.js';
 import { serpapiProvider } from './serpapi.js';
+import { searchapiProvider } from './searchapi.js';
 import { ebayProvider } from './ebay.js';
 
-export const liveProviders = [serpapiProvider, ebayProvider];
+// SearchApi ו-SerpAPI מחזירים את אותם נתוני Google Shopping – פועל רק אחד מהם (SearchApi עדיף, אם הוגדר)
+export const liveProviders = [searchapiProvider, serpapiProvider, ebayProvider];
+const isDuplicate = (p) => p === serpapiProvider && searchapiProvider.enabled();
 
 export function activeProviders() {
-  const live = liveProviders.filter((p) => p.enabled());
+  const live = liveProviders.filter((p) => p.enabled() && !isDuplicate(p));
   if (live.length && process.env.FORCE_DEMO !== '1') return live;
   return demoProvider.enabled() ? [demoProvider, ...live] : live;
 }
@@ -28,7 +31,7 @@ export async function collectOffers(product) {
 
 /** חיפוש מוצרים בספקים חיים שתומכים בכך (כרגע Google Shopping). */
 export async function searchLiveProducts(query) {
-  const providers = liveProviders.filter((p) => p.enabled() && p.searchProducts);
+  const providers = liveProviders.filter((p) => p.enabled() && !isDuplicate(p) && p.searchProducts);
   const results = await Promise.allSettled(providers.map((p) => p.searchProducts(query)));
   const products = [];
   const errors = [];

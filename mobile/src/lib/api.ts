@@ -20,7 +20,7 @@ export type DataMode = 'live' | 'demo';
 export type Club = { id: string; name: string; description: string };
 export type Taxes = { valueUsd?: number; dutyIls: number; vatIls: number; feeIls: number; totalIls: number; exempt: boolean };
 export type Route = { kind: 'direct' | 'forwarder'; name: string; days: string; note?: string; chargeableKg?: number;
-  shippingIls: number; taxes: Taxes; totalIls: number };
+  shippingIls: number; taxes: Taxes; totalIls: number; shippingUnknown?: boolean };
 export type Discount = { kind: 'club' | 'coupon'; name?: string; clubId?: string; code?: string; label: string;
   amountIls: number; verified?: boolean; expires?: string; note?: string };
 export type Offer = {
