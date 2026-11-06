@@ -22,7 +22,7 @@ export async function registerForPush(): Promise<PushResult> {
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('price-alerts', {
-      name: 'התראות מחיר', importance: AndroidImportance.HIGH, lightColor: '#4338CA',
+      name: 'התראות מחיר', importance: AndroidImportance.HIGH, lightColor: '#EA580C',
     });
   }
 

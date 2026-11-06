@@ -34,7 +34,7 @@ export default function RootLayout() {
         headerStyle: { backgroundColor: t.card }, headerTintColor: t.ink, headerTitleStyle: { fontWeight: '700' },
         contentStyle: { backgroundColor: t.bg }, headerBackButtonDisplayMode: 'minimal',
       }}>
-        <Stack.Screen name="index" options={{ title: 'משווה' }} />
+        <Stack.Screen name="index" options={{ title: 'SuperShop' }} />
         <Stack.Screen name="search" options={{ title: 'תוצאות חיפוש' }} />
         <Stack.Screen name="product/[id]" options={{ title: 'השוואת מחירים' }} />
         <Stack.Screen name="clubs" options={{ title: 'המועדונים שלי', presentation: 'modal' }} />

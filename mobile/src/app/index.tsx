@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.page}>
       <View style={styles.hero}>
-        <Image source={require('../../assets/icon.png')} style={styles.logo} accessibilityLabel="הלוגו של משווה" />
+        <Image source={require('../../assets/icon.png')} style={styles.logo} accessibilityLabel="הלוגו של SuperShop" />
         <Text style={[styles.h1, { color: t.ink }]}>המחיר האמיתי, עד הדלת</Text>
         <Text style={[styles.sub, { color: t.muted }]}>
           משווים חנויות בישראל ובחו״ל כולל מועדונים, קופונים, משלוח, מע״מ ומכס
