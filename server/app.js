@@ -114,7 +114,7 @@ export function createApp() {
 
   app.get('/api/meta', (_req, res) => {
     res.json({
-      clubs: getClubs().map(({ id, name, description }) => ({ id, name, description })),
+      clubs: getClubs().map(({ id, name, description, eligibility }) => ({ id, name, description, eligibility })),
       forwarders, providers: activeProviders().map(({ id, name }) => ({ id, name })), mode: dataMode(), deals: dealsEnabled(),
       popular: products.slice(0, 10).map(productView), fx: getRates(),
     });

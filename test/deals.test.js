@@ -93,3 +93,18 @@ test('דיווח "לא עבד": נספר פעם אחת ליום לכל משתמ�
   await putDeals(d);
   assert.equal((await getDeals()).reports[id], undefined);
 });
+
+test('שלושת המקורות קיימים עם זכאות וקישורים, ומופיעים ראשונים באפליקציה', async () => {
+  const d = await getDeals();
+  for (const id of ['behatzdaa', 'pais-plus', 'police-funds']) {
+    const c = d.clubs.find((x) => x.id === id);
+    assert.ok(c, id);
+    assert.ok(c.eligibility && c.sources.length >= 1 && c.sources.every((s) => s.url.startsWith('https://')));
+  }
+  const meta = await fetch(base + '/api/meta').then((r) => r.json());
+  assert.deepEqual(meta.clubs.slice(0, 3).map((c) => c.id), ['behatzdaa', 'pais-plus', 'police-funds']);
+  assert.ok(meta.clubs[1].eligibility.includes('מנויי הפיס'));
+  // קישור מקור לא מאובטח נדחה
+  d.clubs[1].sources[0].url = 'http://insecure.example';
+  assert.equal((await putDeals(d)).status, 400);
+});

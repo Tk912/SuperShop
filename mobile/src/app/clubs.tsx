@@ -20,6 +20,7 @@ export default function Clubs() {
           <View style={{ flex: 1 }}>
             <Text style={{ color: t.ink, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
             <Text style={{ color: t.muted, fontSize: 13 }}>{c.description}</Text>
+            {c.eligibility ? <Text style={{ color: t.muted, fontSize: 12, marginTop: 2 }}>זכאות: {c.eligibility}</Text> : null}
           </View>
           <Switch value={myClubs.includes(c.id)} onValueChange={() => toggle(c.id)} trackColor={{ true: t.brand }} />
         </View>

@@ -4,7 +4,7 @@
   {
    "id": "behatzdaa",
    "name": "בהצדעה",
-   "description": "מועדון ההטבות של משרתי צה\"ל (סדיר, קבע ומילואים)",
+   "description": "מועדון הצרכנות של משרד הביטחון למשתחררים משירות סדיר ולמשרתי מילואים פעילים",
    "rules": [
     {
      "id": "behatzdaa-ksp-1",
@@ -50,6 +50,63 @@
      "source": null,
      "verifiedAt": null,
      "expires": null
+    }
+   ],
+   "primarySource": true,
+   "eligibility": "משתחררים משירות סדיר (עד 3 שנים מהשחרור) ומשרתי מילואים פעילים. החברות ללא תשלום.",
+   "payment": "חלק מההטבות דורשות תשלום בכרטיס Max בהצדעה",
+   "sources": [
+    {
+     "label": "אתר המועדון (כניסה עם ת״ז)",
+     "url": "https://www.behatsdaa.org.il/",
+     "access": "login"
+    },
+    {
+     "label": "כל זכות – מי זכאי ואיך מצטרפים",
+     "url": "https://www.kolzchut.org.il/he/%D7%9E%D7%95%D7%A2%D7%93%D7%95%D7%9F_%D7%91%D7%94%D7%A6%D7%93%D7%A2%D7%94",
+     "access": "public"
+    }
+   ]
+  },
+  {
+   "rules": [],
+   "id": "pais-plus",
+   "name": "פיס פלוס – מנויי מפעל הפיס",
+   "primarySource": true,
+   "description": "מועדון ההטבות של מנויי הפיס",
+   "eligibility": "מנויי הפיס. כמות ההטבות תלויה במסלול ובמספר המנויים.",
+   "payment": "הנפקת שוברים דרך אתר הפיס או האפליקציה",
+   "sources": [
+    {
+     "label": "אתר מפעל הפיס – הטבות למנויים (כניסה למנויים)",
+     "url": "https://www.pais.co.il/",
+     "access": "login"
+    },
+    {
+     "label": "מעריב – השוואת מועדוני ההטבות",
+     "url": "https://www.maariv.co.il/economy/israel/article-1212823",
+     "access": "public"
+    }
+   ]
+  },
+  {
+   "rules": [],
+   "id": "police-funds",
+   "name": "קרנות השוטרים",
+   "primarySource": true,
+   "description": "מועדון הצרכנות של שוטרים, מתנדבים וגמלאי המשטרה",
+   "eligibility": "שוטרים, מתנדבי משטרה וגמלאים החברים בקרנות השוטרים.",
+   "payment": "חלק מההטבות מותנות בכרטיס Max קרנות השוטרים",
+   "sources": [
+    {
+     "label": "דפי ההטבות של המועדון ב-easy (חוסם גישה אוטומטית – לבדיקה ידנית)",
+     "url": "https://easy.co.il/list/Sports-and-Fitness?c2=31339",
+     "access": "public"
+    },
+    {
+     "label": "hon – כרטיס Max קרנות השוטרים",
+     "url": "https://www.hon.co.il/?p=38377",
+     "access": "public"
     }
    ]
   },

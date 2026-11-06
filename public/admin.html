@@ -32,6 +32,11 @@
   #msg { padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; display: none; white-space: pre-wrap; }
   #msg.ok { display: block; background: var(--goodSoft); color: var(--good); } #msg.err { display: block; background: var(--badSoft); color: var(--bad); }
   .muted { color: var(--muted); }
+  .sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .src-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; font-size: 14px; }
+  .src-card h3 { margin: 0; font-size: 16px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .src-card a { color: var(--brand); }
+  .pill { font-size: 12px; border-radius: 999px; padding: 0 8px; background: var(--bg); color: var(--muted); }
 </style>
 </head>
 <body>
@@ -49,6 +54,7 @@
     שורה <span class="badge">אדומה</span> = משתמשים דיווחו שההנחה לא עבדה, וכדאי לבדוק אותה שוב. אימות מחדש מאפס את הדיווחים.
   </div>
   <div id="msg" role="status"></div>
+  <div id="sources" class="sources" aria-label="מקורות ההנחות"></div>
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="clubs" aria-selected="true">הנחות מועדונים</button>
     <button role="tab" data-tab="coupons" aria-selected="false">קופונים</button>
@@ -121,8 +127,32 @@ const common = (r) => `
   <td>${(data.reports[r.id] ?? 0) ? `<span class="badge">${data.reports[r.id]} דיווחים</span>` : ''}</td>
   <td><button data-del title="מחיקה">✕</button></td>`;
 
+// כרטיס לכל מועדון-מקור: זכאות, קישורים לאימות, וכמה הנחות כבר מאומתות
+function renderSources() {
+  const access = { login: 'דורש כניסה', public: 'פתוח', card: 'כרטיס' };
+  $('#sources').innerHTML = data.clubs.filter((c) => c.primarySource).map((c) => {
+    const verified = c.rules.filter((r) => r.status === 'verified' && (!r.expires || r.expires >= today)).length;
+    return `<div class="src-card">
+      <h3>${esc(c.name)} <span class="pill">${verified} מאומתות / ${c.rules.length}</span></h3>
+      <div class="muted">${esc(c.eligibility ?? '')}</div>
+      ${c.payment ? `<div class="muted">💳 ${esc(c.payment)}</div>` : ''}
+      ${(c.sources ?? []).map((s) => `<div>🔗 <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)}</a> <span class="pill">${access[s.access] ?? ''}</span></div>`).join('')}
+      <div><button data-add-club="${esc(c.id)}">+ הנחה ל${esc(c.name)}</button></div>
+    </div>`;
+  }).join('');
+}
+$('#sources').addEventListener('click', (e) => {
+  const id = e.target.dataset?.addClub; if (!id) return;
+  const club = data.clubs.find((c) => c.id === id);
+  club.rules.unshift({ id: `${id}-${Math.random().toString(36).slice(2, 8)}`, storeId: data.stores[0].id, type: 'percent', value: 5,
+    status: 'pending', source: club.sources?.[0]?.url ?? '', expires: null, stackableWithCoupon: false });
+  tab = 'clubs'; document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === 'clubs'));
+  $('#filter').value = 'all'; render(); msg(`נוספה שורה ל${club.name} בראש הטבלה: בחרו חנות וערך, ואמתו מול המקור.`, true);
+});
+
 function render() {
   if (!data) return;
+  renderSources();
   const head = tab === 'clubs'
     ? '<tr><th>מועדון</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>תקרה ₪</th><th>משתלב עם קופון</th></tr>'
     : '<tr><th>קוד</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>הנחה מקס׳</th><th>מטבע</th></tr>';

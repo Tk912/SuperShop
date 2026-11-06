@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "משווה",
-    "slug": "mashve",
+    "slug": "supershop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -63,7 +63,7 @@
         }
       ]
     ],
-    "scheme": "mashve",
+    "scheme": "supershop",
     "description": "משווה – השוואת מחירים עד הבית: חנויות בישראל ובחו״ל, מועדוני הנחות, קופונים, משלוח ומסים.",
     "primaryColor": "#4338CA"
   }

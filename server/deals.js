@@ -57,6 +57,7 @@ function validate(next) {
   if (!Array.isArray(next?.clubs) || !Array.isArray(next?.coupons)) return ['מבנה לא תקין'];
   next.clubs.forEach((c) => {
     if (!c.id || !c.name) errors.push('מועדון בלי id או שם');
+    (c.sources ?? []).forEach((s) => { if (!/^https:\/\//.test(s.url ?? '')) errors.push(`${c.name}: קישור מקור חייב להתחיל ב-https://`); });
     (c.rules ?? []).forEach((r, i) => checkCommon(r, `${c.name} #${i + 1}`));
   });
   next.coupons.forEach((c, i) => {

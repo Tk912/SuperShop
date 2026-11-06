@@ -29,6 +29,34 @@ EXPO_PUBLIC_API_URL=https://api.example.com npx expo start
 - `src/lib/`: לקוח API, ערכת צבעים (בהיר/כהה), שמירת המועדונים במכשיר (AsyncStorage).
 - כיווניות RTL נכפית דרך התוסף `expo-localization` (`forcesRTL`) בקובץ `app.json`.
 
+## חיבור לפרויקט supershop ב-Expo
+האפליקציה מוגדרת עם `slug: "supershop"`, ויש לה `eas.json` עם שלושה פרופילי בנייה:
+- `development`: בניית פיתוח עם expo-dev-client.
+- `preview`: קובץ APK להתקנה ישירה, ו-iOS בהפצה פנימית.
+- `production`: לחנויות.
+
+החלק היחיד שחסר הוא הקישור לפרויקט שלכם ב-Expo. במחשב שלכם, מתיקיית `mobile`:
+
+```bash
+npm install
+npx eas-cli@latest login
+npx eas-cli@latest init
+```
+`eas init` שואלת איזה חשבון הוא הבעלים ומקשרת לפרויקט supershop. היא מוסיפה ל-`app.json` את `owner` ואת `extra.eas.projectId`, ו-`projectId` הוא מה שנדרש להתראות push.
+
+כתובת השרת לכל סביבה:
+```bash
+npx eas-cli@latest env:create --name EXPO_PUBLIC_API_URL --value https://<כתובת-השרת> --environment preview --environment production --visibility plaintext
+```
+
+בנייה ראשונה לבדיקה, APK ל-Android שמתקינים ישירות בטלפון:
+```bash
+npx eas-cli@latest build --profile preview --platform android
+```
+ל-iPhone צריך חשבון Apple Developer (99$ לשנה): `--platform ios`.
+
+> התראות push לא עובדות ב-Expo Go. צריך בנייה (`preview` או `development`) ומכשיר אמיתי. ב-Android צריך גם להגדיר FCM: `npx eas-cli@latest credentials`.
+
 ## בנייה לחנויות
 ```bash
 npx eas-cli@latest build --platform all

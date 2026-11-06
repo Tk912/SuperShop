@@ -17,7 +17,7 @@ export const imageUrl = (path: string) => (path.startsWith('http') ? path : `${A
 export type ProductSummary = { id: string; name: string; brand: string; category: string; weightKg: number; image: string;
   weightEstimated?: boolean; live?: boolean; fromPrice?: number; fromCurrency?: string; fromStore?: string; rating?: number; reviews?: number };
 export type DataMode = 'live' | 'demo';
-export type Club = { id: string; name: string; description: string };
+export type Club = { id: string; name: string; description: string; eligibility?: string };
 export type Taxes = { valueUsd?: number; dutyIls: number; vatIls: number; feeIls: number; totalIls: number; exempt: boolean };
 export type Route = { kind: 'direct' | 'forwarder'; name: string; days: string; note?: string; chargeableKg?: number;
   shippingIls: number; taxes: Taxes; totalIls: number; shippingUnknown?: boolean };

@@ -71,7 +71,7 @@ export function alertMessage(w, best, decision) {
   return {
     to: w.pushToken, sound: 'default', title,
     body: `${w.productName}: ${ils(best.totalIls)} עד הבית ב-${best.storeName}`,
-    data: { productId: w.productId, url: `mashve://product/${encodeURIComponent(w.productId)}` },
+    data: { productId: w.productId, url: `supershop://product/${encodeURIComponent(w.productId)}` },
   };
 }
 
