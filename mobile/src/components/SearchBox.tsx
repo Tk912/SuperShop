@@ -63,7 +63,7 @@ export function SearchBox({ initial = '', autoFocus = false }: { initial?: strin
         ) : null}
       </View>
 
-      {open && q.trim() !== '' && items.length > 0 && (
+      {open && q.trim() !== '' && (
         <View style={[styles.list, { backgroundColor: t.card, borderColor: t.line }]}>
           {items.map((p) => (
             <Pressable key={p.id} onPress={() => pick(p)}
@@ -75,6 +75,11 @@ export function SearchBox({ initial = '', autoFocus = false }: { initial?: strin
               </View>
             </Pressable>
           ))}
+          <Pressable onPress={submit} style={({ pressed }) => [styles.row, styles.searchAll, { borderTopColor: t.line },
+            pressed && { backgroundColor: t.brandSoft }]} accessibilityRole="search">
+            <Text style={{ fontSize: 18 }}>🛒</Text>
+            <Text style={{ color: t.brand, fontWeight: '700', flex: 1 }} numberOfLines={1}>חיפוש “{q.trim()}” בכל החנויות</Text>
+          </Pressable>
         </View>
       )}
     </View>
@@ -91,4 +96,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, borderRadius: 10 },
   thumb: { width: 48, height: 48, borderRadius: 8 },
   name: { fontWeight: '600', fontSize: 15 },
+  searchAll: { borderTopWidth: StyleSheet.hairlineWidth, borderRadius: 0, paddingVertical: 12 },
 });

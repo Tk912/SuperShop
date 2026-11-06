@@ -1,30 +1,40 @@
-// מאחד את כל הספקים הפעילים, עם timeout, cache וטיפול בכשלים (ספק שנפל לא מפיל את החיפוש).
+// מאחד את כל הספקים הפעילים, עם טיפול בכשלים (ספק שנפל לא מפיל את החיפוש).
+// כשיש ספק חי פעיל, מחירי הדוגמה כבויים – כדי לא לערבב מחירים אמיתיים עם מומצאים (FORCE_DEMO=1 מחזיר אותם).
 import { demoProvider } from './demo.js';
 import { serpapiProvider } from './serpapi.js';
 import { ebayProvider } from './ebay.js';
 
-export const allProviders = [demoProvider, serpapiProvider, ebayProvider];
-const cache = new Map();
-const TTL = 15 * 60 * 1000;
+export const liveProviders = [serpapiProvider, ebayProvider];
 
 export function activeProviders() {
-  return allProviders.filter((p) => p.enabled());
+  const live = liveProviders.filter((p) => p.enabled());
+  if (live.length && process.env.FORCE_DEMO !== '1') return live;
+  return demoProvider.enabled() ? [demoProvider, ...live] : live;
 }
 
-export async function collectOffers(product) {
-  const key = product.id;
-  const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < TTL) return hit.value;
+export const isLive = () => liveProviders.some((p) => p.enabled());
 
-  const results = await Promise.allSettled(activeProviders().map((p) => p.offersFor(product)));
+export async function collectOffers(product) {
+  const providers = activeProviders();
+  const results = await Promise.allSettled(providers.map((p) => p.offersFor(product)));
   const offers = [];
   const errors = [];
   results.forEach((r, i) => {
-    const p = activeProviders()[i];
     if (r.status === 'fulfilled') offers.push(...r.value);
-    else errors.push({ provider: p.id, error: String(r.reason?.message ?? r.reason) });
+    else errors.push({ provider: providers[i].id, error: String(r.reason?.message ?? r.reason) });
   });
-  const value = { offers, errors };
-  if (!errors.length) cache.set(key, { at: Date.now(), value });
-  return value;
+  return { offers, errors };
+}
+
+/** חיפוש מוצרים בספקים חיים שתומכים בכך (כרגע Google Shopping). */
+export async function searchLiveProducts(query) {
+  const providers = liveProviders.filter((p) => p.enabled() && p.searchProducts);
+  const results = await Promise.allSettled(providers.map((p) => p.searchProducts(query)));
+  const products = [];
+  const errors = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') products.push(...r.value);
+    else errors.push({ provider: providers[i].id, error: String(r.reason?.message ?? r.reason) });
+  });
+  return { products, errors };
 }

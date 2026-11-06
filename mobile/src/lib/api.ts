@@ -14,7 +14,9 @@ function resolveBaseUrl(): string {
 export const API_URL = resolveBaseUrl();
 export const imageUrl = (path: string) => (path.startsWith('http') ? path : `${API_URL}${path}`);
 
-export type ProductSummary = { id: string; name: string; brand: string; category: string; weightKg: number; image: string };
+export type ProductSummary = { id: string; name: string; brand: string; category: string; weightKg: number; image: string;
+  weightEstimated?: boolean; live?: boolean; fromPrice?: number; fromCurrency?: string; fromStore?: string; rating?: number; reviews?: number };
+export type DataMode = 'live' | 'demo';
 export type Club = { id: string; name: string; description: string };
 export type Taxes = { valueUsd?: number; dutyIls: number; vatIls: number; feeIls: number; totalIls: number; exempt: boolean };
 export type Route = { kind: 'direct' | 'forwarder'; name: string; days: string; note?: string; chargeableKg?: number;
@@ -25,11 +27,13 @@ export type Offer = {
   storeId: string; storeName: string; storeType: 'local' | 'intl'; domain: string; url: string; source: string;
   currency: string; price: number; priceIls: number; shipsDirectToIL: boolean;
   discounts: { applied: Discount[]; totalIls: number; availableClubs: Discount[]; availableCoupons: Discount[] };
-  routes: Route[]; best: Route; totalIls: number; missedClubs: Discount[];
+  routes: Route[]; best: Route; totalIls: number; missedClubs: Discount[]; inStock: boolean; details: string[];
 };
-export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors: { provider: string; error: string }[];
+export type ProviderError = { provider: string; error: string };
+export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors: ProviderError[]; mode: DataMode;
   fx: { rates: Record<string, number>; source: string } };
-export type Meta = { clubs: Club[]; popular: ProductSummary[] };
+export type SearchResponse = { results: ProductSummary[]; mode: DataMode; errors: ProviderError[] };
+export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode };
 
 async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { signal });
@@ -41,7 +45,7 @@ export const api = {
   meta: () => get<Meta>('/api/meta'),
   suggest: (q: string, signal?: AbortSignal) =>
     get<{ suggestions: ProductSummary[] }>(`/api/suggest?q=${encodeURIComponent(q)}`, signal).then((r) => r.suggestions),
-  search: (q: string) => get<{ results: ProductSummary[] }>(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.results),
+  search: (q: string) => get<SearchResponse>(`/api/search?q=${encodeURIComponent(q)}`),
   offers: (id: string, clubs: string[]) =>
     get<OffersResponse>(`/api/products/${encodeURIComponent(id)}/offers?clubs=${clubs.join(',')}`),
 };

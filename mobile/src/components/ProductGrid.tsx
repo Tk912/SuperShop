@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { imageUrl, type ProductSummary } from '../lib/api';
-import { useTheme } from '../lib/theme';
+import { money, useTheme } from '../lib/theme';
 
 export function ProductGrid({ items }: { items: ProductSummary[] }) {
   const t = useTheme();
@@ -13,6 +13,12 @@ export function ProductGrid({ items }: { items: ProductSummary[] }) {
           <Pressable style={StyleSheet.flatten([styles.tile, { backgroundColor: t.card, borderColor: t.line }])}>
             <Image source={{ uri: imageUrl(p.image) }} style={styles.img} contentFit="cover" />
             <Text style={[styles.name, { color: t.ink }]} numberOfLines={2}>{p.name}</Text>
+            {p.fromPrice != null && (
+              <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }} numberOfLines={1}>
+                החל מ-<Text style={{ color: t.good, fontWeight: '700' }}>{money(p.fromPrice, p.fromCurrency ?? 'ILS')}</Text>
+                {p.fromStore ? ` · ${p.fromStore}` : ''}
+              </Text>
+            )}
           </Pressable>
         </Link>
       ))}

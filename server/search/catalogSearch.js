@@ -1,12 +1,19 @@
-// חיפוש והשלמה אוטומטית על הקטגלוג: התאמת קידומת, תת-מחרוזת ושגיאות כתיב קלות.
-import { products } from '../data/catalog.js';
+// חיפוש והשלמה אוטומטית: התאמת קידומת, תת-מחרוזת ושגיאות כתיב קלות.
+// עובד על כל רשימת מוצרים (דמו + נלמדים); האינדקס של כל מוצר נבנה פעם אחת ונשמר.
+import { products as demoProducts } from '../data/catalog.js';
 import { normalize, tokens, levenshtein } from './normalize.js';
 
-const index = products.map((p) => {
-  const fields = [p.name, p.brand, ...(p.aliases ?? [])];
-  const words = new Set(fields.flatMap(tokens));
-  return { product: p, words: [...words], haystack: fields.map(normalize).join(' | ') };
-});
+const indexCache = new WeakMap();
+
+function entryFor(p) {
+  let e = indexCache.get(p);
+  if (!e) {
+    const fields = [p.name, p.brand, ...(p.aliases ?? [])].filter(Boolean);
+    e = { product: p, words: [...new Set(fields.flatMap(tokens))], haystack: fields.map(normalize).join(' | ') };
+    indexCache.set(p, e);
+  }
+  return e;
+}
 
 function tokenScore(qt, entry, isLast) {
   let best = 0;
@@ -29,12 +36,13 @@ export function scoreProduct(query, entry) {
     total += s;
   }
   if (entry.haystack.includes(normalize(query))) total += 5; // ביטוי שלם
+  if (entry.product.aliases?.length) total += 1; // מוצר קטלוג מתויג – עדיפות קלה
   return total;
 }
 
-export function searchCatalog(query, limit = 8) {
-  return index
-    .map((e) => ({ product: e.product, score: scoreProduct(query, e) }))
+export function searchCatalog(query, limit = 8, list = demoProducts) {
+  return list
+    .map((p) => ({ product: p, score: scoreProduct(query, entryFor(p)) }))
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)

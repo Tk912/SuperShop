@@ -1,0 +1,17 @@
+{
+  "_note": "תשובה מוקלטת לבדיקות בלבד. שמות השדות לפי התיעוד של SerpAPI; הערכים מומצאים.",
+  "search_metadata": { "status": "Success" },
+  "shopping_results": [
+    { "position": 1, "title": "Sony WH-1000XM6 אוזניות אלחוטיות עם סינון רעשים", "product_id": "1111111111111111111",
+      "immersive_product_page_token": "fixture-token-xm6", "source": "KSP", "multiple_sources": true,
+      "price": "‏1,549.00 ‏₪", "extracted_price": 1549, "rating": 4.7, "reviews": 1240,
+      "thumbnail": "https://example.com/thumbs/xm6.webp", "delivery": "משלוח חינם" },
+    { "position": 2, "title": "Sony WH-1000XM6 Wireless Noise Canceling Headphones - Black", "product_id": "2222222222222222222",
+      "immersive_product_page_token": "fixture-token-xm6-black", "source": "Amazon.com", "price": "$398.00", "extracted_price": 398,
+      "thumbnail": "https://example.com/thumbs/xm6-black.webp" },
+    { "position": 3, "title": "Sony WH-1000XM5 Headphones", "product_id": "3333333333333333333",
+      "immersive_product_page_token": "fixture-token-xm5", "source": "eBay", "price": "$279.99", "extracted_price": 279.99,
+      "thumbnail": "https://example.com/thumbs/xm5.webp" },
+    { "position": 4, "title": "Result without price should be skipped", "product_id": "4444444444444444444", "source": "Nowhere" }
+  ]
+}

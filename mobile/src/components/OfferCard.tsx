@@ -29,7 +29,8 @@ export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
     : `מסים ${ils(b.taxes.totalIls)}` + (b.taxes.dutyIls ? ` (מכס ${ils(b.taxes.dutyIls)})` : '');
 
   return (
-    <View style={[styles.card, { backgroundColor: t.card, borderColor: isBest ? t.good : t.line, borderWidth: isBest ? 2 : 1 }]}>
+    <View style={[styles.card, { backgroundColor: t.card, borderColor: isBest ? t.good : t.line, borderWidth: isBest ? 2 : 1,
+      opacity: o.inStock ? 1 : 0.6 }]}>
       {/* שורה עליונה: חנות + מחיר סופי */}
       <View style={styles.top}>
         <View style={{ flex: 1, gap: 4 }}>
@@ -37,6 +38,7 @@ export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
             <Text style={[styles.store, { color: t.ink }]}>{o.storeName}</Text>
             {o.storeType === 'local' ? <Badge label="ישראל" fg={t.brand} bg={t.brandSoft} /> : <Badge label='חו״ל' fg={t.intl} bg={t.intlSoft} />}
             {o.storeType === 'intl' && !o.shipsDirectToIL && <Badge label="אין משלוח לארץ" fg={t.warn} bg={t.warnSoft} />}
+            {!o.inStock && <Badge label="אזל מהמלאי" fg={t.muted} bg={t.bg} />}
           </View>
           <Text style={{ color: t.muted, fontSize: 13 }}>
             {money(o.price, o.currency)}{o.currency !== 'ILS' ? `  ≈ ${ils(o.priceIls)}` : ''}

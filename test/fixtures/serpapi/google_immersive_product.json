@@ -1,0 +1,19 @@
+{
+  "_note": "תשובה מוקלטת לבדיקות בלבד. שמות השדות לפי התיעוד של SerpAPI; הערכים מומצאים.",
+  "search_metadata": { "status": "Success" },
+  "product_results": {
+    "title": "Sony WH-1000XM6", "brand": "Sony", "thumbnails": ["https://example.com/thumbs/xm6.webp"],
+    "stores": [
+      { "name": "KSP", "link": "https://ksp.co.il/web/item/999001", "title": "אוזניות Sony WH-1000XM6",
+        "details_and_offers": ["במלאי", "משלוח חינם"], "price": "‏1,549.00 ‏₪", "extracted_price": 1549 },
+      { "name": "Amazon.com - Seller", "link": "https://www.amazon.com/dp/B0FIXTURE1", "title": "Sony WH-1000XM6",
+        "details_and_offers": ["In stock online"], "price": "$398.00", "extracted_price": 398,
+        "shipping": "+ $18.50", "shipping_extracted": 18.5, "estimated_tax": "+ $0.00", "extracted_estimated_tax": 0 },
+      { "name": "Best Buy", "link": "https://www.bestbuy.com/site/fixture/6500001.p", "title": "Sony - WH-1000XM6",
+        "details_and_offers": ["In stock online"], "price": "$399.99", "extracted_price": 399.99 },
+      { "name": "גאדג'ט פלוס", "link": "https://www.gadget-plus-example.co.il/p/xm6", "title": "Sony WH-1000XM6",
+        "details_and_offers": ["Out of stock"], "price": "1,499 ₪", "extracted_price": 1499 },
+      { "name": "Broken store without link", "price": "$1", "extracted_price": 1 }
+    ]
+  }
+}

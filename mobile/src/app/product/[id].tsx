@@ -45,7 +45,7 @@ export default function Product() {
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={[styles.title, { color: t.ink }]}>{data.product.name}</Text>
           <Text style={{ color: t.muted, fontSize: 13 }}>
-            {data.product.brand} · {catName(data.product.category)} · ~{data.product.weightKg} ק״ג · {data.offers.length} הצעות
+            {data.product.brand} · {catName(data.product.category)} · {data.product.weightEstimated ? 'משקל משוער' : 'משקל'} ~{data.product.weightKg} ק״ג · {data.offers.length} הצעות
           </Text>
         </View>
       </View>
@@ -91,9 +91,11 @@ export default function Product() {
         keyExtractor={(o, i) => `${o.storeId}-${i}`}
         renderItem={({ item }) => <OfferCard o={item} isBest={item === best} />}
         ListHeaderComponent={header}
-        ListEmptyComponent={<Text style={{ color: t.muted, textAlign: 'center' }}>אין הצעות בסינון זה.</Text>}
+        ListEmptyComponent={<Text style={{ color: t.muted, textAlign: 'center' }}>
+          {data.offers.length ? 'אין הצעות בסינון זה.' : 'לא נמצאו חנויות שמוכרות את המוצר כרגע.'}</Text>}
         ListFooterComponent={<Text style={{ color: t.muted, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
-          שער דולר ₪{data.fx.rates.USD.toFixed(3)} ({data.fx.source === 'live' ? 'עדכני' : 'קבוע'}) · נתוני דוגמה · המסים הם הערכה
+          שער דולר ₪{data.fx.rates.USD.toFixed(3)} ({data.fx.source === 'live' ? 'עדכני' : 'קבוע'}) ·{' '}
+          {data.mode === 'live' ? 'מחירים מ-Google Shopping, ייתכנו שינויים באתר החנות' : 'נתוני דוגמה'} · המסים הם הערכה
         </Text>}
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchOffers(); setRefreshing(false); }} />}

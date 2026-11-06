@@ -1,5 +1,6 @@
 // eBay Browse API – מחירים חיים + עלות משלוח אמיתית לישראל.
 // הפעלה: EBAY_CLIENT_ID + EBAY_CLIENT_SECRET (https://developer.ebay.com).
+import { cached } from '../cache.js';
 let token = { value: null, exp: 0 };
 
 async function getToken(fetchImpl) {
@@ -19,9 +20,14 @@ async function getToken(fetchImpl) {
 export const ebayProvider = {
   id: 'ebay',
   name: 'eBay API',
+  live: true,
   enabled: () => !!(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET),
 
-  async offersFor(product, { fetchImpl = fetch } = {}) {
+  offersFor(product, opts) {
+    return cached(`ebay:${product.name}`, 6 * 60 * 60 * 1000, () => this.fetchOffers(product, opts));
+  },
+
+  async fetchOffers(product, { fetchImpl = fetch } = {}) {
     const t = await getToken(fetchImpl);
     const u = new URL('https://api.ebay.com/buy/browse/v1/item_summary/search');
     u.search = new URLSearchParams({ q: product.name, limit: '10', filter: 'buyingOptions:{FIXED_PRICE},conditions:{NEW}' });
