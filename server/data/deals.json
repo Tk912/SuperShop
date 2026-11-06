@@ -1,0 +1,392 @@
+{
+ "_note": "הנחות מועדונים וקופונים. status: sample (לדוגמה) | pending (ממתין לאימות) | verified (מאומת). במחירים אמיתיים חלות רק הנחות verified שלא פג תוקפן. עורכים דרך /admin.html",
+ "clubs": [
+  {
+   "id": "behatzdaa",
+   "name": "בהצדעה",
+   "description": "מועדון הצרכנות של משרד הביטחון למשתחררים משירות סדיר ולמשרתי מילואים פעילים",
+   "rules": [
+    {
+     "id": "behatzdaa-ksp-1",
+     "storeId": "ksp",
+     "type": "percent",
+     "value": 5,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "behatzdaa-ivory-2",
+     "storeId": "ivory",
+     "type": "percent",
+     "value": 6,
+     "cap": 400,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "behatzdaa-bug-3",
+     "storeId": "bug",
+     "type": "percent",
+     "value": 4,
+     "stackableWithCoupon": true,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "behatzdaa-shufersal-4",
+     "storeId": "shufersal",
+     "type": "percent",
+     "value": 7,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ],
+   "primarySource": true,
+   "eligibility": "משתחררים משירות סדיר (עד 3 שנים מהשחרור) ומשרתי מילואים פעילים. החברות ללא תשלום.",
+   "payment": "חלק מההטבות דורשות תשלום בכרטיס Max בהצדעה",
+   "sources": [
+    {
+     "label": "אתר המועדון (כניסה עם ת״ז)",
+     "url": "https://www.behatsdaa.org.il/",
+     "access": "login"
+    },
+    {
+     "label": "כל זכות – מי זכאי ואיך מצטרפים",
+     "url": "https://www.kolzchut.org.il/he/%D7%9E%D7%95%D7%A2%D7%93%D7%95%D7%9F_%D7%91%D7%94%D7%A6%D7%93%D7%A2%D7%94",
+     "access": "public"
+    }
+   ]
+  },
+  {
+   "rules": [],
+   "id": "pais-plus",
+   "name": "פיס פלוס – מנויי מפעל הפיס",
+   "primarySource": true,
+   "description": "מועדון ההטבות של מנויי הפיס",
+   "eligibility": "מנויי הפיס. כמות ההטבות תלויה במסלול ובמספר המנויים.",
+   "payment": "הנפקת שוברים דרך אתר הפיס או האפליקציה",
+   "sources": [
+    {
+     "label": "אתר מפעל הפיס – הטבות למנויים (כניסה למנויים)",
+     "url": "https://www.pais.co.il/",
+     "access": "login"
+    },
+    {
+     "label": "מעריב – השוואת מועדוני ההטבות",
+     "url": "https://www.maariv.co.il/economy/israel/article-1212823",
+     "access": "public"
+    }
+   ]
+  },
+  {
+   "rules": [],
+   "id": "police-funds",
+   "name": "קרנות השוטרים",
+   "primarySource": true,
+   "description": "מועדון הצרכנות של שוטרים, מתנדבים וגמלאי המשטרה",
+   "eligibility": "שוטרים, מתנדבי משטרה וגמלאים החברים בקרנות השוטרים.",
+   "payment": "חלק מההטבות מותנות בכרטיס Max קרנות השוטרים",
+   "sources": [
+    {
+     "label": "דפי ההטבות של המועדון ב-easy (חוסם גישה אוטומטית – לבדיקה ידנית)",
+     "url": "https://easy.co.il/list/Sports-and-Fitness?c2=31339",
+     "access": "public"
+    },
+    {
+     "label": "hon – כרטיס Max קרנות השוטרים",
+     "url": "https://www.hon.co.il/?p=38377",
+     "access": "public"
+    }
+   ]
+  },
+  {
+   "id": "hever",
+   "name": "חבר",
+   "description": "מועדון הצרכנות של אנשי כוחות הביטחון",
+   "rules": [
+    {
+     "id": "hever-ksp-1",
+     "storeId": "ksp",
+     "type": "percent",
+     "value": 4,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "hever-lastprice-2",
+     "storeId": "lastprice",
+     "type": "percent",
+     "value": 8,
+     "cap": 300,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "hever-idigital-3",
+     "storeId": "idigital",
+     "type": "fixed",
+     "value": 150,
+     "minSpend": 2000,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ]
+  },
+  {
+   "id": "histadrut",
+   "name": "הסתדרות – כוח לעובדים",
+   "description": "מועדון חברי ההסתדרות",
+   "rules": [
+    {
+     "id": "histadrut-bug-1",
+     "storeId": "bug",
+     "type": "percent",
+     "value": 5,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "histadrut-shufersal-2",
+     "storeId": "shufersal",
+     "type": "percent",
+     "value": 5,
+     "stackableWithCoupon": true,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ]
+  },
+  {
+   "id": "max",
+   "name": "Max – הטבות כרטיס",
+   "description": "הטבות לבעלי כרטיסי מקס",
+   "rules": [
+    {
+     "id": "max-aliexpress-1",
+     "storeId": "aliexpress",
+     "type": "percent",
+     "value": 8,
+     "cap": 150,
+     "stackableWithCoupon": true,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "max-amazon_us-2",
+     "storeId": "amazon_us",
+     "type": "percent",
+     "value": 3,
+     "stackableWithCoupon": true,
+     "note": "החזר כספי (cashback)",
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ]
+  },
+  {
+   "id": "isracard",
+   "name": "ישראכרט – הטבות",
+   "description": "הטבות לבעלי כרטיסי ישראכרט/אמריקן אקספרס",
+   "rules": [
+    {
+     "id": "isracard-ebay-1",
+     "storeId": "ebay",
+     "type": "percent",
+     "value": 5,
+     "cap": 200,
+     "stackableWithCoupon": true,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "isracard-ivory-2",
+     "storeId": "ivory",
+     "type": "percent",
+     "value": 3,
+     "stackableWithCoupon": true,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ]
+  },
+  {
+   "id": "hitech",
+   "name": "הייטקזון",
+   "description": "מועדון עובדי ההייטק",
+   "rules": [
+    {
+     "id": "hitech-ivory-1",
+     "storeId": "ivory",
+     "type": "percent",
+     "value": 5,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    },
+    {
+     "id": "hitech-lastprice-2",
+     "storeId": "lastprice",
+     "type": "percent",
+     "value": 6,
+     "stackableWithCoupon": false,
+     "status": "sample",
+     "source": null,
+     "verifiedAt": null,
+     "expires": null
+    }
+   ]
+  }
+ ],
+ "coupons": [
+  {
+   "id": "ksp-ksp50",
+   "storeId": "ksp",
+   "code": "KSP50",
+   "type": "fixed",
+   "value": 50,
+   "currency": "ILS",
+   "minSpend": 500,
+   "expires": "2026-12-31",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "ivory-ivory5",
+   "storeId": "ivory",
+   "code": "IVORY5",
+   "type": "percent",
+   "value": 5,
+   "maxDiscount": 250,
+   "categories": [
+    "audio",
+    "wearables"
+   ],
+   "expires": "2026-11-30",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "lastprice-lp100",
+   "storeId": "lastprice",
+   "code": "LP100",
+   "type": "fixed",
+   "value": 100,
+   "currency": "ILS",
+   "minSpend": 1500,
+   "expires": "2026-12-15",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "aliexpress-ae11sale",
+   "storeId": "aliexpress",
+   "code": "AE11SALE",
+   "type": "fixed",
+   "value": 15,
+   "currency": "USD",
+   "minSpend": 109,
+   "expires": "2026-11-12",
+   "note": "מבצע 11.11",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "aliexpress-aenew8",
+   "storeId": "aliexpress",
+   "code": "AENEW8",
+   "type": "fixed",
+   "value": 8,
+   "currency": "USD",
+   "minSpend": 60,
+   "expires": "2026-12-31",
+   "note": "משתמשים חדשים",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "ebay-ebaytech10",
+   "storeId": "ebay",
+   "code": "EBAYTECH10",
+   "type": "percent",
+   "value": 10,
+   "maxDiscount": 100,
+   "currency": "USD",
+   "categories": [
+    "phones",
+    "computers",
+    "gaming"
+   ],
+   "expires": "2026-11-20",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "iherb-welcome20",
+   "storeId": "iherb",
+   "code": "WELCOME20",
+   "type": "percent",
+   "value": 20,
+   "maxDiscount": 30,
+   "currency": "USD",
+   "expires": "2026-12-31",
+   "note": "הזמנה ראשונה",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  },
+  {
+   "id": "bhphoto-bhfall",
+   "storeId": "bhphoto",
+   "code": "BHFALL",
+   "type": "fixed",
+   "value": 20,
+   "currency": "USD",
+   "minSpend": 300,
+   "expires": "2026-11-30",
+   "status": "sample",
+   "source": null,
+   "verifiedAt": null
+  }
+ ]
+}

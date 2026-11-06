@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "משווה",
+    "slug": "supershop",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mashve.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#4338CA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mashve.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true,
+          "forcesRTL": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "משווה משתמשת במצלמה כדי לסרוק ברקוד של מוצר ולהשוות את המחיר שלו.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#0b1020"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4338CA",
+          "defaultChannel": "price-alerts"
+        }
+      ]
+    ],
+    "scheme": "supershop",
+    "description": "משווה – השוואת מחירים עד הבית: חנויות בישראל ובחו״ל, מועדוני הנחות, קופונים, משלוח ומסים.",
+    "primaryColor": "#4338CA"
+  }
+}

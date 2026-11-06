@@ -1,0 +1,86 @@
+{
+ "_note": "תשובה אמיתית מ-SearchApi.io (6.11.2026), מקוצרת. לבדיקות בלבד – המחירים ישתנו.",
+ "product": {
+  "title": "אוזניות אלחוטיות Sony WH-1000XM6 עם ביטול רעשים",
+  "brand": "Sony",
+  "product_id": "12827020246278533726"
+ },
+ "offers": [
+  {
+   "position": 1,
+   "title": "אוזניות קשת over ear אלחוטיות עם ביטול רעשים sony wh 1000xm6 שחור",
+   "link": "https://ksp.co.il/web/item/386098?srsltid=AYCX9vLyIUgm9fjCplMraMr_8zzDoW6ew-9a7Cwjdbor_XYnbW-fj0vMItg",
+   "price": "‏1,163.00 ‏₪",
+   "extracted_price": 1163.0,
+   "delivery_price": "דמי המשלוח: ‏28 ‏₪",
+   "extracted_delivery_price": 28.0,
+   "total_price": "‏1,191.00 ‏₪",
+   "extracted_total_price": 1191.0,
+   "rating": 4.8,
+   "reviews": 450,
+   "details": [
+    "במלאי אונליין",
+    "דמי המשלוח: ‏28 ‏₪",
+    "החזרה תוך 14 ימים"
+   ],
+   "merchant": {
+    "name": "KSP",
+    "favicon": "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://ksp.co.il&client=SHOPPING&size=32&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+   },
+   "tag": "המחיר הטוב ביותר"
+  },
+  {
+   "position": 2,
+   "title": "אוזניות אלחוטיות WH-1000XM6 - שחור סוני - Sony",
+   "link": "https://www.bug.co.il/brand/sony/wh/1000/xm6/black",
+   "price": "‏1,199.00 ‏₪",
+   "extracted_price": 1199.0,
+   "delivery_price": "משלוח חינם",
+   "total_price": "‏1,199.00 ‏₪",
+   "extracted_total_price": 1199.0,
+   "rating": 4.5,
+   "reviews": 47,
+   "details": [
+    "במלאי אונליין",
+    "משלוח חינם",
+    "החזרה תוך 14 ימים"
+   ],
+   "merchant": {
+    "name": "באג",
+    "favicon": "https://encrypted-tbn3.gstatic.com/faviconV2?url=https://www.bug.co.il&client=SHOPPING&size=32&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+   }
+  },
+  {
+   "position": 3,
+   "title": "SONY אוזניות אלחוטיות ON EAR כולל ביטול רעשים SONY סוני WH-1000XM6 שחור",
+   "link": "https://shop.super-pharm.co.il/electricity-and-electronics/monitors-and-sound/headphones/rainbow-headphones/%D7%90%D7%95%D7%96%D7%A0%D7%99%D7%95%D7%AA-%D7%90%D7%9C%D7%97%D7%95%D7%98%D7%99%D7%95%D7%AA-ON-EAR-%D7%9B%D7%95%D7%9C%D7%9C-%D7%91%D7%99%D7%98%D7%95%D7%9C-%D7%A8%D7%A2%D7%A9%D7%99%D7%9D-SONY-%D7%A1%D7%95%D7%A0%D7%99-WH-1000XM6-%D7%A9%D7%97%D7%95%D7%A8/p/mp-00356524?offer=43477636",
+   "price": "‏1,174.00 ‏₪",
+   "extracted_price": 1174.0,
+   "delivery_price": "דמי המשלוח: ‏29 ‏₪",
+   "extracted_delivery_price": 29.0,
+   "total_price": "‏1,203.00 ‏₪",
+   "extracted_total_price": 1203.0,
+   "rating": 4.0,
+   "reviews": 18000,
+   "details": [
+    "במלאי אונליין",
+    "דמי המשלוח: ‏29 ‏₪",
+    "החזרה תוך 30 ימים"
+   ],
+   "merchant": {
+    "name": "סופר-פארם אונליין",
+    "favicon": "https://encrypted-tbn0.gstatic.com/faviconV2?url=https://shop.super-pharm.co.il&client=SHOPPING&size=32&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+   }
+  }
+ ],
+ "typical_prices": {
+  "low_price": "‏1,174 ‏₪",
+  "extracted_low_price": 1174.0,
+  "high_price": "‏1,275 ‏₪",
+  "extracted_high_price": 1275.0,
+  "popular_choice": "KSP",
+  "popular_choice_link": "https://ksp.co.il/web/item/386098?srsltid=AYCX9vLyIUgm9fjCplMraMr_8zzDoW6ew-9a7Cwjdbor_XYnbW-fj0vMItg",
+  "popular_choice_price": "‏1,163.00 ‏₪",
+  "extracted_popular_choice_price": 1163.0
+ }
+}
