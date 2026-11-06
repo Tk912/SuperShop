@@ -44,10 +44,7 @@ npx eas-cli@latest init
 ```
 `eas init` שואלת איזה חשבון הוא הבעלים ומקשרת לפרויקט supershop. היא מוסיפה ל-`app.json` את `owner` ואת `extra.eas.projectId`, ו-`projectId` הוא מה שנדרש להתראות push.
 
-כתובת השרת לכל סביבה:
-```bash
-npx eas-cli@latest env:create --name EXPO_PUBLIC_API_URL --value https://<כתובת-השרת> --environment preview --environment production --visibility plaintext
-```
+כתובת השרת מוגדרת ב-`eas.json` (`EXPO_PUBLIC_API_URL`) ומצביעה על השרת ב-Cloud Run.
 
 בנייה ראשונה לבדיקה, APK ל-Android שמתקינים ישירות בטלפון:
 ```bash
@@ -55,7 +52,11 @@ npx eas-cli@latest build --profile preview --platform android
 ```
 ל-iPhone צריך חשבון Apple Developer (99$ לשנה): `--platform ios`.
 
-> התראות push לא עובדות ב-Expo Go. צריך בנייה (`preview` או `development`) ומכשיר אמיתי. ב-Android צריך גם להגדיר FCM: `npx eas-cli@latest credentials`.
+### התראות push ב-Android (FCM): מוגדר ונבדק על מכשיר
+- **`google-services.json`** לא נמצא במאגר. הוא שמור ב-expo.dev כמשתנה סביבה מסוג קובץ בשם `GOOGLE_SERVICES_JSON` (לסביבות preview ו-production), ו-`app.config.js` מעביר אותו לבנייה. אם המשתנה חסר, בניית Android נעצרת בהתחלה עם הודעה ברורה.
+- **מפתח FCM V1** של Firebase הועלה ל-Expo, בדף Credentials תחת Android ← `com.ghostdogdev.supershop`.
+- **בדיקה ידנית בלי לחכות 6 שעות:** ב-GitHub נכנסים ל-Actions ← **Check price alerts now** ← Run workflow.
+- **Expo Go** לא תומך בהתראות. צריך בנייה (`preview` או `development`) ומכשיר אמיתי.
 
 ## בנייה לחנויות
 ```bash

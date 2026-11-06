@@ -33,12 +33,15 @@
 בסיום, כתובת השרת מופיעה בסיכום של הריצה. היא נראית בערך כך: `https://supershop-api-xxxxx.me-west1.run.app`.
 
 ### 4. חיבור האפליקציה לשרת
-את הכתובת מגדירים ב-EAS לסביבות הבנייה, ואז בונים מחדש:
-```bash
-cd mobile
-npx eas-cli@latest env:create --name EXPO_PUBLIC_API_URL --value https://<הכתובת> --environment preview --environment production --visibility plaintext
-npx eas-cli@latest build --profile preview --platform android
-```
+הכתובת `https://supershop-api-ufho3endrq-zf.a.run.app` מוגדרת ב-`mobile/eas.json`. אם השרת עובר לכתובת חדשה, מעדכנים אותה שם ובונים מחדש.
+
+### 5. התראות מחיר
+- **בדיקה אוטומטית:** Cloud Scheduler (`supershop-alerts`) מפעיל אותה כל 6 שעות.
+- **בדיקה ידנית:** ב-GitHub נכנסים ל-Actions ← **Check price alerts now** ← Run workflow.
+
+### הרשאות שנדרשו בפרויקט חדש (לתיעוד)
+- `github-deployer@…`: Editor, Cloud Run Admin, Service Account User.
+- `…-compute@developer.gserviceaccount.com` (בונה ומריץ את השרת): Cloud Run Builder, Cloud Datastore User.
 
 ## מה כדאי לדעת
 - **עלות:** תוכנית Blaze. בשימוש נמוך ההוצאה בדרך כלל בתוך המכסה החינמית. כדאי להגדיר [התראת תקציב](https://console.cloud.google.com/billing/budgets).
