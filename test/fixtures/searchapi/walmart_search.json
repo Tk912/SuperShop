@@ -1,0 +1,100 @@
+{
+ "_note": "תשובה אמיתית מ-SearchApi.io (6.11.2026) לחיפוש \"AirPods Pro 3\", מקוצרת. לבדיקות בלבד.",
+ "organic_results": [
+  {
+   "id": "17835006350",
+   "title": "Apple AirPods Pro 3",
+   "link": "https://www.walmart.com/ip/AirPods-Pro-3/17835006350?classType=REGULAR&athbdg=L1200",
+   "seller_name": "Walmart.com",
+   "price": "$261.00",
+   "extracted_price": 261.0,
+   "thumbnail": "https://i5.walmartimages.com/seo/AirPods-Pro-3_bbf7d96e-0ea2-4adc-93cc-f2aefe9c9fad.5094bad5696a875c3e764810e9670083.jpeg",
+   "fulfillment": {
+    "delivery": {
+     "text": "DELIVERY",
+     "expected_date": "2026-11-06"
+    },
+    "pickup": {
+     "text": "PICKUP",
+     "expected_date": "2026-11-06"
+    }
+   }
+  },
+  {
+   "id": "20987150982",
+   "title": "Restored Apple AirPods Pro (3rd Generation)",
+   "link": "https://www.walmart.com/ip/Apple-AirPod-Pro-3rd-Generation/20987150982?conditionGroupCode=2&classType=VARIANT",
+   "seller_name": "Min Max",
+   "price": "$183.00",
+   "extracted_price": 183.0,
+   "condition": "Restored: Like New",
+   "is_out_of_stock": true,
+   "thumbnail": "https://i5.walmartimages.com/asr/88d17271-4ddf-48e0-b1e9-1d8a117373e0.902df495f2fc962f1d3065e40a0b11df.jpeg"
+  },
+  {
+   "id": "20946923297",
+   "title": "(Open Box) Apple AirPods Pro 3 Wireless Active Noise Cancelling Earbuds - White",
+   "link": "https://www.walmart.com/ip/Apple-AirPods-Pro-3-Wireless-Active-Noise-Cancelling-Earbuds-White/20946923297?conditionGroupCode=3&classType=REGULAR",
+   "seller_name": "Gadget Replay",
+   "price": "$231.99",
+   "extracted_price": 231.99,
+   "condition": "Open Box",
+   "is_out_of_stock": true,
+   "thumbnail": "https://i5.walmartimages.com/asr/6ec2a130-6c22-4dfd-b3d2-7196d36bb4d7.8ef3b0cceb6b1c11c64ddee94674df9a.jpeg"
+  },
+  {
+   "id": "21097700190",
+   "title": "Restored Apple AirPods Pro 3 Wireless Active Noise Cancelling Earbuds - White",
+   "link": "https://www.walmart.com/ip/Apple-AirPods-Pro-3-Wireless-Active-Noise-Cancelling-Earbuds-White/21097700190?conditionGroupCode=2&classType=REGULAR",
+   "seller_name": "GM DEALS",
+   "price": "$201.29",
+   "extracted_price": 201.29,
+   "condition": "Restored: Like New",
+   "thumbnail": "https://i5.walmartimages.com/asr/205b3f51-cea9-440c-a807-5077a22b11c3.3f886feeeed81f7a1e750f483d81346b.jpeg",
+   "fulfillment": {
+    "delivery": {
+     "text": "DELIVERY",
+     "expected_date": "2026-11-12"
+    }
+   }
+  },
+  {
+   "id": "21019156123",
+   "title": "Restored Apple AirPods Pro (3rd Generation)",
+   "link": "https://www.walmart.com/ip/Apple-AirPod-Pro-3rd-Generation/21019156123?conditionGroupCode=2&classType=VARIANT",
+   "seller_name": "Cellfeee",
+   "price": "$179.99",
+   "extracted_price": 179.99,
+   "condition": "Restored: Good",
+   "is_out_of_stock": true,
+   "thumbnail": "https://i5.walmartimages.com/asr/e43809fe-4b05-4af2-afc4-e7349bd368fa.08231dcb02b44b44545d469769d9f898.jpeg"
+  },
+  {
+   "id": "20987200755",
+   "title": "Pre-Owned Apple AirPods Pro 3 In-Ear Bluetooth Earbuds, White",
+   "link": "https://www.walmart.com/ip/Apple-AirPods-Pro-3-In-Ear-Bluetooth-Earbuds-White/20987200755?conditionGroupCode=3&classType=REGULAR",
+   "seller_name": "TheRightOne",
+   "price": "$194.99",
+   "extracted_price": 194.99,
+   "condition": "Pre-Owned: Fair",
+   "thumbnail": "https://i5.walmartimages.com/asr/3d6e0c3a-41fb-45ba-9370-992ef3beddea.87da3a4a6b5e802243097fee1f6bf75c.jpeg",
+   "fulfillment": {
+    "delivery": {
+     "text": "DELIVERY",
+     "expected_date": "2026-11-10"
+    }
+   }
+  },
+  {
+   "id": "20439773445",
+   "title": "Restored Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging",
+   "link": "https://www.walmart.com/ip/Apple-AirPods-Pro-3-Wireless-Earbuds-Active-Noise-Cancellation-Live-Translation-Heart-Rate-Sensing-Hearing-Aid-Feature-Bluetooth-Headphones-Spatial-A/20439773445?conditionGroupCode=2&classType=REGULAR",
+   "seller_name": "Web Offers",
+   "price": "$248.99",
+   "extracted_price": 248.99,
+   "condition": "Restored: Like New",
+   "is_out_of_stock": true,
+   "thumbnail": "https://i5.walmartimages.com/asr/900d963b-a81d-4d00-902b-7c263eada4bb.f91d291f122c82d8d1d5fb35bcb259bf.jpeg"
+  }
+ ]
+}

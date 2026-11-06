@@ -27,7 +27,7 @@ const get = (p) => fetch(base + p).then((r) => r.json());
 
 test('רק SearchApi פעיל כשמוגדרים שניהם', async () => {
   const { activeProviders } = await import('../server/providers/index.js');
-  assert.deepEqual(activeProviders().map((p) => p.id), ['searchapi']);
+  assert.deepEqual(activeProviders().map((p) => p.id), ['searchapi', 'marketplaces']);
 });
 
 test('חיפוש אמיתי: מחירים בשקלים, חנויות ישראליות, תמונות', async () => {

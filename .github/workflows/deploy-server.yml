@@ -85,4 +85,5 @@ jobs:
           curl -fsS "$URL/api/products/$(jq -rn --arg id "$ID" '$id|@uri')/offers" -o offers.json
           jq -e '(.offers | length) > 0 and .history != null' offers.json > /dev/null
           jq -r '"מוצר: \(.product.name) · \(.offers | length) חנויות · הכי זול עד הבית: ₪\(.offers[0].totalIls | floor) ב-\(.offers[0].storeName)"' offers.json | tee -a "$GITHUB_STEP_SUMMARY"
+          jq -r '"חנויות: " + ([.offers[] | "\(.storeName) ₪\(.totalIls | floor)"] | join(", ")) + (if (.errors | length) > 0 then " · שגיאות ספקים: " + ([.errors[] | "\(.provider): \(.error)"] | join("; ")) else "" end)' offers.json | tee -a "$GITHUB_STEP_SUMMARY"
           echo "### השרת פעיל: $URL" >> "$GITHUB_STEP_SUMMARY"

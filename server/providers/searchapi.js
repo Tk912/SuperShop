@@ -18,7 +18,7 @@ const SEARCH_TTL = 12 * 60 * 60 * 1000;
 const OFFERS_TTL = 6 * 60 * 60 * 1000;
 const isGoogleLink = (u) => /^https?:\/\/(www\.)?google\./.test(u ?? '');
 
-async function apiFetch(params, { fetchImpl = fetch } = {}) {
+export async function apiFetch(params, { fetchImpl = fetch } = {}) {
   const fixtures = process.env.SEARCHAPI_FIXTURE_DIR;
   if (fixtures) return JSON.parse(fs.readFileSync(path.join(fixtures, `${params.engine}.json`), 'utf8'));
   const u = new URL('https://www.searchapi.io/api/v1/search');
