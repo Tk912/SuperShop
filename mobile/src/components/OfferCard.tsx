@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { Offer, Route } from '../lib/api';
+import { api, type Discount, type Offer, type Route } from '../lib/api';
 import { ils, money, useTheme, type Theme } from '../lib/theme';
 
 /** "דמי המשלוח: 28 ₪" כבר כולל עלות; משלוח לא ידוע לא מוצג כחינם. */
@@ -13,6 +13,26 @@ function shippingText(r: Route) {
 
 function Badge({ label, fg, bg }: { label: string; fg: string; bg: string }) {
   return <View style={[styles.badge, { backgroundColor: bg }]}><Text style={{ color: fg, fontSize: 11, fontWeight: '700' }}>{label}</Text></View>;
+}
+
+/** "אומת ב-12.11 · מקור · לא עבד?" – שקיפות לגבי ההנחה, ודיווח שמגיע לדף הניהול. */
+function DealTrust({ d, t }: { d: Discount; t: Theme }) {
+  const [reported, setReported] = useState(false);
+  const date = d.verifiedAt ? d.verifiedAt.split('-').reverse().slice(0, 2).join('.') : null;
+  return (
+    <View style={styles.discRow}>
+      {date && <Text style={{ color: t.muted, fontSize: 12 }}>אומת {date}</Text>}
+      {d.source && (
+        <Pressable onPress={() => Linking.openURL(d.source!)} hitSlop={6}>
+          <Text style={{ color: t.brand, fontSize: 12 }}>מקור</Text>
+        </Pressable>
+      )}
+      <Pressable disabled={reported} hitSlop={6}
+        onPress={() => api.reportDeal(d.id).then(() => setReported(true)).catch(() => setReported(true))}>
+        <Text style={{ color: reported ? t.muted : t.warn, fontSize: 12 }}>{reported ? 'תודה, נבדוק' : 'לא עבד?'}</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 function CouponCode({ code, t }: { code: string; t: Theme }) {
@@ -66,7 +86,9 @@ export function OfferCard({ o, isBest, deals = true }: { o: Offer; isBest: boole
               ✓ {d.kind === 'club' ? `${d.name}: ${d.label}` : `קופון ${d.label}`} (−{ils(d.amountIls)})
             </Text>
             {d.kind === 'coupon' && d.code && <CouponCode code={d.code} t={t} />}
-            {d.kind === 'coupon' && !d.verified && <Badge label="לא מאומת" fg={t.warn} bg={t.warnSoft} />}
+            {d.status === 'sample' && <Badge label="לדוגמה" fg={t.warn} bg={t.warnSoft} />}
+            {d.status === 'pending' && <Badge label="לא מאומת" fg={t.warn} bg={t.warnSoft} />}
+            {d.status === 'verified' && <DealTrust d={d} t={t} />}
           </View>
         ))}
         <Text style={{ color: t.muted, fontSize: 13 }}>

@@ -3,7 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { products } from './data/catalog.js';
 import { getProduct, allProducts, learnProducts } from './productStore.js';
-import { clubs } from './data/clubs.js';
+import { getClubs, getDeals, saveDeals, reportDeal } from './deals.js';
+import { stores } from './data/stores.js';
 import { forwarders } from './data/forwarders.js';
 import { searchCatalog } from './search/catalogSearch.js';
 import { productSvg } from './images.js';
@@ -32,7 +33,7 @@ export function createApp() {
     if (req.method === 'OPTIONS') return res.status(204).end();
     next();
   });
-  app.use('/api', express.json({ limit: '10kb' }));
+  app.use('/api', express.json({ limit: '200kb' }));
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.get('/img/:id.svg', (req, res) => {
@@ -88,16 +89,32 @@ export function createApp() {
   app.put('/api/watches', wrap(async (req) => ({ watch: upsertWatch({ ...req.body, pushToken: tokenOf(req) }) })));
   app.delete('/api/watches', wrap(async (req) => ({ removed: removeWatch(tokenOf(req), req.query.productId) })));
 
-  // הפעלת בדיקת התראות מבחוץ (למשל cron של שירות האירוח). פעיל רק כשמוגדר ADMIN_TOKEN.
-  app.post('/api/admin/check-alerts', wrap(async (req) => {
+  // ---- ניהול (רק כשמוגדר ADMIN_TOKEN; אחרת הנתיבים לא קיימים) ----
+  const admin = (fn) => wrap(async (req) => {
     const ok = process.env.ADMIN_TOKEN && req.get('authorization') === `Bearer ${process.env.ADMIN_TOKEN}`;
     if (!ok) throw Object.assign(new Error('not found'), { status: 404 });
-    return checkWatches();
+    return fn(req);
+  });
+  // הפעלת בדיקת התראות מבחוץ (למשל cron של שירות האירוח)
+  app.post('/api/admin/check-alerts', admin(() => checkWatches()));
+  // מאגר ההנחות: קריאה ושמירה מלאה (דף הניהול: /admin.html)
+  app.get('/api/admin/deals', admin(() => ({ ...getDeals(), stores: stores.map(({ id, name, type }) => ({ id, name, type })) })));
+  app.put('/api/admin/deals', admin((req) => saveDeals(req.body)));
+
+  // משתמש מדווח שהנחה/קופון לא עבדו – מופיע בדף הניהול כדי לבדוק מחדש
+  const reported = new Set(); // דיווח אחד ליום לכל כתובת IP והנחה
+  app.post('/api/deals/:id/report', wrap(async (req) => {
+    const key = `${req.ip}|${req.params.id}|${new Date().toISOString().slice(0, 10)}`;
+    if (reported.has(key)) return { ok: true, duplicate: true };
+    const n = reportDeal(req.params.id);
+    reported.add(key);
+    if (reported.size > 50000) reported.clear();
+    return { ok: true, reports: n };
   }));
 
   app.get('/api/meta', (_req, res) => {
     res.json({
-      clubs: clubs.map(({ id, name, description }) => ({ id, name, description })),
+      clubs: getClubs().map(({ id, name, description }) => ({ id, name, description })),
       forwarders, providers: activeProviders().map(({ id, name }) => ({ id, name })), mode: dataMode(), deals: dealsEnabled(),
       popular: products.slice(0, 10).map(productView), fx: getRates(),
     });

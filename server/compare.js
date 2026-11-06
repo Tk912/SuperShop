@@ -4,10 +4,13 @@ import { getStore, resolveStore } from './storeRegistry.js';
 import { evaluateOffer, missedClubSavings } from './pricing/landedCost.js';
 import { refreshRates } from './pricing/fx.js';
 import { recordPrice } from './priceHistory.js';
+import { dealFilter as makeDealFilter, hasLiveDeals } from './deals.js';
 
 export const dataMode = () => (isLive() && process.env.FORCE_DEMO !== '1' ? 'live' : 'demo');
-// נתוני המועדונים והקופונים עדיין לדוגמה: מופעלים רק במצב דמו, כדי לא להוריד קופון מומצא ממחיר אמיתי.
-export const dealsEnabled = () => dataMode() === 'demo' || process.env.SAMPLE_DEALS === '1';
+// על מחירים אמיתיים חלות רק הנחות מאומתות ובתוקף (SAMPLE_DEALS=1 מפעיל גם את הדוגמאות – להדגמה בלבד).
+const currentFilter = () => makeDealFilter({ live: dataMode() === 'live', includeSamples: process.env.SAMPLE_DEALS === '1' });
+/** האם יש בכלל הנחות פעילות – כדי שהאפליקציה תדע אם להציג את בחירת המועדונים. */
+export const dealsEnabled = () => dataMode() === 'demo' || process.env.SAMPLE_DEALS === '1' || hasLiveDeals();
 
 // חנות לפי מזהה; חנות אד-הוק שנשכחה (הפעלה מחדש + הצעות מהמטמון) משוחזרת מפרטי ההצעה
 const storeFor = (offer) => getStore(offer.storeId) ?? (offer.storeHint ? resolveStore(offer.storeHint) : undefined);
@@ -20,13 +23,14 @@ export async function compareProduct(product, userClubIds = []) {
   const { rates, source: fxSource } = await refreshRates();
   const { offers, errors } = await collectOffers(product);
   const deals = dealsEnabled();
+  const dealFilter = currentFilter();
 
   const evaluated = offers
     .map((offer) => {
       const store = storeFor(offer);
       if (!store) return null;
-      const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals });
-      ev.missedClubs = deals ? missedClubSavings({ offer, product, store, rates, userClubIds }) : [];
+      const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals, dealFilter });
+      ev.missedClubs = deals ? missedClubSavings({ offer, product, store, rates, userClubIds, dealFilter }) : [];
       ev.title = offer.title;
       ev.inStock = offer.inStock !== false;
       ev.details = offer.details ?? [];
@@ -37,7 +41,7 @@ export async function compareProduct(product, userClubIds = []) {
 
   const best = offers
     .filter((o) => o.inStock !== false && storeFor(o))
-    .map((offer) => evaluateOffer({ offer, product, store: storeFor(offer), rates, userClubIds: [], deals }))
+    .map((offer) => evaluateOffer({ offer, product, store: storeFor(offer), rates, userClubIds: [], deals, dealFilter }))
     .filter((e) => e.totalIls != null)
     .sort((a, b) => a.totalIls - b.totalIls)[0] ?? null;
 

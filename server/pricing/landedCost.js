@@ -1,6 +1,5 @@
 // מנוע "עלות סופית עד הבית": הנחות מועדון + קופונים + משלוח (ישיר / צד ג') + מסים.
-import { clubs } from '../data/clubs.js';
-import { coupons as allCoupons } from '../data/coupons.js';
+import { getClubs, getCoupons } from '../deals.js';
 import { forwarders, storeRegion } from '../data/forwarders.js';
 import { taxConfig } from './taxConfig.js';
 import { toIls, fromIls } from './fx.js';
@@ -9,28 +8,32 @@ const round2 = (n) => Math.round(n * 100) / 100;
 
 // ---------- הנחות ----------
 
-export function applicableClubRules(store, product, priceIls, userClubIds) {
+const ALL = () => true;
+const meta = (d) => ({ id: d.id, status: d.status, source: d.source ?? null, verifiedAt: d.verifiedAt ?? null });
+
+export function applicableClubRules(store, product, priceIls, userClubIds, filter = ALL) {
   const out = [];
-  for (const club of clubs) {
+  for (const club of getClubs()) {
     if (!userClubIds.includes(club.id)) continue;
     for (const rule of club.rules) {
+      if (!filter(rule)) continue;
       if (rule.storeId !== store.id && rule.storeId !== '*') continue;
       if (rule.categories && !rule.categories.includes(product.category)) continue;
       if (rule.minSpend && priceIls < rule.minSpend) continue;
       let amount = rule.type === 'percent' ? (priceIls * rule.value) / 100 : rule.value;
       if (rule.cap) amount = Math.min(amount, rule.cap);
-      out.push({ kind: 'club', clubId: club.id, name: club.name, label: describe(rule, 'ILS'),
+      out.push({ kind: 'club', ...meta(rule), clubId: club.id, name: club.name, label: describe(rule, 'ILS'),
         amountIls: round2(Math.min(amount, priceIls)), stackable: !!rule.stackableWithCoupon, note: rule.note });
     }
   }
   return out;
 }
 
-export function applicableCoupons(store, product, price, rates, now = new Date()) {
+export function applicableCoupons(store, product, price, rates, now = new Date(), filter = ALL) {
   const today = now.toISOString().slice(0, 10);
   const out = [];
-  for (const c of allCoupons) {
-    if (c.storeId !== store.id) continue;
+  for (const c of getCoupons()) {
+    if (c.storeId !== store.id || !filter(c)) continue;
     if (c.expires && c.expires < today) continue;
     if (c.categories && !c.categories.includes(product.category)) continue;
     const cur = c.currency ?? store.currency;
@@ -38,7 +41,7 @@ export function applicableCoupons(store, product, price, rates, now = new Date()
     if (c.minSpend && priceInCur < c.minSpend) continue;
     let amount = c.type === 'percent' ? (priceInCur * c.value) / 100 : c.value;
     if (c.maxDiscount) amount = Math.min(amount, c.maxDiscount);
-    out.push({ kind: 'coupon', code: c.code, label: describe(c, cur), verified: c.verified, expires: c.expires,
+    out.push({ kind: 'coupon', ...meta(c), code: c.code, label: describe(c, cur), verified: c.status === 'verified', expires: c.expires,
       note: c.note, amountIls: round2(Math.min(toIls(amount, cur, rates), toIls(price, store.currency, rates))) });
   }
   return out;
@@ -98,13 +101,13 @@ export function importTaxes(itemIls, shippingIls, category, rates, { prepaidHand
  * @param offer {storeId, price, currency?, url?}
  * @returns אובייקט עם כל מסלולי המשלוח, ההנחות והעלות הסופית הזולה ביותר.
  */
-// deals=false מכבה הנחות מועדון וקופונים (למשל כשנתוני ההנחות הם לדוגמה והמחירים אמיתיים)
-export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date(), deals = true }) {
+// dealFilter קובע אילו הנחות מותר להפעיל (למשל: רק מאומתות, כשהמחירים אמיתיים). deals=false מכבה את כולן.
+export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date(), deals = true, dealFilter = ALL }) {
   const currency = offer.currency ?? store.currency;
   const priceIls = toIls(offer.price, currency, rates);
 
-  const clubOpts = deals ? applicableClubRules(store, product, priceIls, userClubIds) : [];
-  const couponOpts = deals ? applicableCoupons(store, product, offer.price, rates, now) : [];
+  const clubOpts = deals ? applicableClubRules(store, product, priceIls, userClubIds, dealFilter) : [];
+  const couponOpts = deals ? applicableCoupons(store, product, offer.price, rates, now, dealFilter) : [];
   const discount = bestDiscount(clubOpts, couponOpts, priceIls);
   const itemIls = priceIls - discount.totalIls;
   const itemInStoreCur = fromIls(itemIls, currency, rates);
@@ -147,8 +150,8 @@ export function evaluateOffer({ offer, product, store, rates, userClubIds = [], 
 }
 
 /** רשימת מועדונים שהמשתמש אינו חבר בהם אבל היו מוזילים את המחיר – "כדאי להצטרף". */
-export function missedClubSavings({ offer, product, store, rates, userClubIds }) {
+export function missedClubSavings({ offer, product, store, rates, userClubIds, dealFilter = ALL }) {
   const priceIls = toIls(offer.price, offer.currency ?? store.currency, rates);
-  const others = clubs.map((c) => c.id).filter((id) => !userClubIds.includes(id));
-  return applicableClubRules(store, product, priceIls, others);
+  const others = getClubs().map((c) => c.id).filter((id) => !userClubIds.includes(id));
+  return applicableClubRules(store, product, priceIls, others, dealFilter);
 }

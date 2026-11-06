@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>ניהול הנחות – משווה</title>
+<style>
+  :root { --bg:#f6f7fb; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#4338ca; --good:#059669; --goodSoft:#ecfdf5;
+    --warn:#b45309; --warnSoft:#fffbeb; --bad:#b91c1c; --badSoft:#fef2f2; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1020; --card:#131a2e; --ink:#e5e7eb; --muted:#94a3b8; --line:#243049; --brand:#818cf8;
+    --good:#34d399; --goodSoft:#052e22; --warn:#fbbf24; --warnSoft:#3a2a05; --bad:#f87171; --badSoft:#3b0d0d; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 2; }
+  h1 { font-size: 20px; margin: 0; margin-inline-end: auto; }
+  main { padding: 16px; max-width: 1400px; margin: 0 auto; }
+  input, select, button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+  .help { color: var(--muted); font-size: 14px; line-height: 1.6; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+  .wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 6px; border-bottom: 1px solid var(--line); text-align: start; vertical-align: middle; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--card); }
+  td input[type=number] { width: 80px; } td input.src { width: 220px; } td input.code { width: 120px; } td input[type=date] { width: 140px; }
+  tr.verified { background: var(--goodSoft); } tr.reported { background: var(--badSoft); }
+  .status-verified { color: var(--good); font-weight: 700; } .status-pending { color: var(--warn); font-weight: 700; }
+  .badge { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 12px; font-weight: 700; background: var(--badSoft); color: var(--bad); }
+  #msg { padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; display: none; white-space: pre-wrap; }
+  #msg.ok { display: block; background: var(--goodSoft); color: var(--good); } #msg.err { display: block; background: var(--badSoft); color: var(--bad); }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ניהול הנחות מועדונים וקופונים</h1>
+  <input id="token" type="password" placeholder="ADMIN_TOKEN" autocomplete="off" aria-label="סיסמת ניהול" />
+  <button id="load">טעינה</button>
+  <button id="save" class="primary" disabled>שמירה</button>
+</header>
+<main>
+  <div class="help">
+    כל הנחה מקבלת סטטוס: <b>לדוגמה</b>, <b>ממתין לאימות</b> או <b class="status-verified">מאומת</b>.
+    על מחירים אמיתיים חלות <b>רק הנחות מאומתות שלא פג תוקפן</b>. כדי לסמן הנחה כמאומתת צריך לצרף קישור למקור, למשל דף ההטבה באתר המועדון.
+    תאריך האימות נרשם אוטומטית בשמירה.
+    שורה <span class="badge">אדומה</span> = משתמשים דיווחו שההנחה לא עבדה, וכדאי לבדוק אותה שוב. אימות מחדש מאפס את הדיווחים.
+  </div>
+  <div id="msg" role="status"></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-tab="clubs" aria-selected="true">הנחות מועדונים</button>
+    <button role="tab" data-tab="coupons" aria-selected="false">קופונים</button>
+    <span class="muted" style="margin-inline-start:12px">סינון:</span>
+    <select id="filter" aria-label="סינון">
+      <option value="all">הכול</option><option value="attention">דורש תשומת לב (דיווחים / ממתין / פג תוקף)</option>
+      <option value="verified">מאומתים</option><option value="sample">לדוגמה</option>
+    </select>
+    <button id="add">+ הוספה</button>
+  </div>
+  <div class="wrap"><table id="grid"></table></div>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+let data = null, tab = 'clubs';
+const today = new Date().toISOString().slice(0, 10);
+try { $('#token').value = sessionStorage.getItem('adminToken') ?? ''; } catch {}
+
+function msg(text, ok) { const m = $('#msg'); m.textContent = text; m.className = ok ? 'ok' : 'err'; }
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const api = (method, body) => fetch('/api/admin/deals', { method,
+  headers: { Authorization: 'Bearer ' + $('#token').value, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+  body: body ? JSON.stringify(body) : undefined });
+
+$('#load').onclick = async () => {
+  try { sessionStorage.setItem('adminToken', $('#token').value); } catch {}
+  const r = await api('GET');
+  if (!r.ok) return msg(r.status === 404 ? 'סיסמה שגויה, או ש-ADMIN_TOKEN לא מוגדר בשרת.' : 'שגיאה ' + r.status, false);
+  data = await r.json(); $('#save').disabled = false; msg('נטען.', true); render();
+};
+
+$('#save').onclick = async () => {
+  const r = await api('PUT', { clubs: data.clubs, coupons: data.coupons });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return msg('לא נשמר:\n' + (j.error ?? r.status).split('; ').join('\n'), false);
+  data = { ...data, ...j }; msg('נשמר. הנחות מאומתות חלות מעכשיו על מחירים אמיתיים.', true); render();
+};
+
+document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => {
+  tab = b.dataset.tab; document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b)); render();
+});
+$('#filter').onchange = render;
+
+$('#add').onclick = () => {
+  if (!data) return;
+  const id = 'new-' + Math.random().toString(36).slice(2, 8);
+  if (tab === 'clubs') data.clubs[0].rules.unshift({ id, storeId: data.stores[0].id, type: 'percent', value: 5, status: 'pending', source: '', expires: null, stackableWithCoupon: false });
+  else data.coupons.unshift({ id, storeId: data.stores[0].id, code: '', type: 'percent', value: 5, status: 'pending', source: '', expires: null });
+  render();
+};
+
+// כל השורות כרשימה שטוחה עם הפניה לאובייקט המקורי (עריכה במקום)
+function rows() {
+  const list = tab === 'clubs' ? data.clubs.flatMap((c) => c.rules.map((r) => ({ r, club: c }))) : data.coupons.map((r) => ({ r }));
+  const f = $('#filter').value;
+  return list.filter(({ r }) => f === 'all' || (f === 'verified' && r.status === 'verified') || (f === 'sample' && r.status === 'sample')
+    || (f === 'attention' && ((data.reports[r.id] ?? 0) > 0 || r.status === 'pending' || (r.expires && r.expires < today))));
+}
+
+const opt = (v, cur, label) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(label ?? v)}</option>`;
+const storeSel = (r) => `<select data-k="storeId">${data.stores.map((s) => opt(s.id, r.storeId, s.name)).join('')}</select>`;
+const statusSel = (r) => `<select data-k="status" class="status-${r.status}">${opt('sample', r.status, 'לדוגמה')}${opt('pending', r.status, 'ממתין לאימות')}${opt('verified', r.status, 'מאומת')}</select>`;
+const num = (k, r) => `<input type="number" step="any" min="0" data-k="${k}" value="${esc(r[k])}" />`;
+const common = (r) => `
+  <td><select data-k="type">${opt('percent', r.type, '%')}${opt('fixed', r.type, '₪/סכום')}</select></td>
+  <td>${num('value', r)}</td><td>${num('minSpend', r)}</td>
+  <td><input type="date" data-k="expires" value="${esc(r.expires ?? '')}" /></td>
+  <td>${statusSel(r)}</td><td><input class="src" data-k="source" placeholder="https://…" value="${esc(r.source ?? '')}" /></td>
+  <td class="muted">${esc(r.verifiedAt ?? '–')}</td>
+  <td>${(data.reports[r.id] ?? 0) ? `<span class="badge">${data.reports[r.id]} דיווחים</span>` : ''}</td>
+  <td><button data-del title="מחיקה">✕</button></td>`;
+
+function render() {
+  if (!data) return;
+  const head = tab === 'clubs'
+    ? '<tr><th>מועדון</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>תקרה ₪</th><th>משתלב עם קופון</th></tr>'
+    : '<tr><th>קוד</th><th>חנות</th><th>סוג</th><th>ערך</th><th>מינימום</th><th>תוקף</th><th>סטטוס</th><th>מקור</th><th>אומת</th><th></th><th></th><th>הנחה מקס׳</th><th>מטבע</th></tr>';
+  const body = rows().map(({ r, club }, i) => {
+    const cls = (data.reports[r.id] ?? 0) ? 'reported' : r.status === 'verified' ? 'verified' : '';
+    const first = tab === 'clubs'
+      ? `<td><select data-club>${data.clubs.map((c) => opt(c.id, club.id, c.name)).join('')}</select></td>`
+      : `<td><input class="code" data-k="code" value="${esc(r.code)}" /></td>`;
+    const extra = tab === 'clubs'
+      ? `<td>${num('cap', r)}</td><td><input type="checkbox" data-k="stackableWithCoupon" ${r.stackableWithCoupon ? 'checked' : ''} /></td>`
+      : `<td>${num('maxDiscount', r)}</td><td><select data-k="currency">${['ILS', 'USD', 'EUR'].map((c) => opt(c, r.currency ?? 'ILS')).join('')}</select></td>`;
+    return `<tr class="${cls}" data-i="${i}">${first}<td>${storeSel(r)}</td>${common(r)}${extra}</tr>`;
+  }).join('');
+  $('#grid').innerHTML = `<thead>${head}</thead><tbody>${body || '<tr><td colspan="13" class="muted">אין שורות בסינון הזה.</td></tr>'}</tbody>`;
+}
+
+// עריכה: כל שדה עם data-k מעדכן את האובייקט במקום
+$('#grid').addEventListener('change', (e) => {
+  const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+  const { r, club } = rows()[Number(tr.dataset.i)];
+  if (e.target.matches('[data-club]')) { // העברת חוק למועדון אחר
+    club.rules.splice(club.rules.indexOf(r), 1);
+    data.clubs.find((c) => c.id === e.target.value).rules.push(r);
+  } else {
+    const k = e.target.dataset.k; const t = e.target;
+    r[k] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (t.value === '' ? undefined : Number(t.value)) : (t.value || (k === 'expires' ? null : t.value));
+    if (k === 'status' && r.status !== 'verified') r.verifiedAt = null;
+  }
+  render();
+});
+$('#grid').addEventListener('click', (e) => {
+  if (!e.target.matches('[data-del]')) return;
+  const { r, club } = rows()[Number(e.target.closest('tr').dataset.i)];
+  const list = club ? club.rules : data.coupons; list.splice(list.indexOf(r), 1); render();
+});
+</script>
+</body>
+</html>

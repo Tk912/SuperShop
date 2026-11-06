@@ -21,8 +21,9 @@ export type Club = { id: string; name: string; description: string };
 export type Taxes = { valueUsd?: number; dutyIls: number; vatIls: number; feeIls: number; totalIls: number; exempt: boolean };
 export type Route = { kind: 'direct' | 'forwarder'; name: string; days: string; note?: string; chargeableKg?: number;
   shippingIls: number; taxes: Taxes; totalIls: number; shippingUnknown?: boolean };
-export type Discount = { kind: 'club' | 'coupon'; name?: string; clubId?: string; code?: string; label: string;
-  amountIls: number; verified?: boolean; expires?: string; note?: string };
+export type DealStatus = 'sample' | 'pending' | 'verified';
+export type Discount = { kind: 'club' | 'coupon'; id: string; status: DealStatus; source: string | null; verifiedAt: string | null;
+  name?: string; clubId?: string; code?: string; label: string; amountIls: number; verified?: boolean; expires?: string; note?: string };
 export type Offer = {
   storeId: string; storeName: string; storeType: 'local' | 'intl'; domain: string; url: string; source: string;
   currency: string; price: number; priceIls: number; shipsDirectToIL: boolean;
@@ -63,6 +64,10 @@ export const api = {
     send<{ watch: Watch }>('PUT', '/api/watches', { pushToken, ...w }),
   deleteWatch: (pushToken: string, productId: string) =>
     send<{ removed: number }>('DELETE', `/api/watches?pushToken=${encodeURIComponent(pushToken)}&productId=${encodeURIComponent(productId)}`),
+  reportDeal: async (dealId: string) => {
+    const res = await fetch(`${API_URL}/api/deals/${encodeURIComponent(dealId)}/report`, { method: 'POST' });
+    if (!res.ok) throw new Error(`שגיאת שרת (${res.status})`);
+  },
   offers: (id: string, clubs: string[]) =>
     get<OffersResponse>(`/api/products/${encodeURIComponent(id)}/offers?clubs=${clubs.join(',')}`),
 };
