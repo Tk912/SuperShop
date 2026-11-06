@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { AlertsBanner } from '../components/AlertsBanner';
 import { api, imageUrl } from '../lib/api';
 import { priceAlert, useFavorites, type Favorite } from '../lib/favorites';
 import { ils, useTheme } from '../lib/theme';
@@ -32,6 +33,7 @@ export default function Favorites() {
   if (!favorites.length) {
     return (
       <View style={{ padding: 32, alignItems: 'center', gap: 8 }}>
+        <View style={{ alignSelf: 'stretch' }}><AlertsBanner /></View>
         <Text style={{ fontSize: 40 }}>♡</Text>
         <Text style={{ color: t.ink, fontSize: 17, fontWeight: '700' }}>עדיין אין מוצרים במעקב</Text>
         <Text style={{ color: t.muted, textAlign: 'center' }}>בדף של מוצר לוחצים “מעקב מחיר”, ואפשר גם לקבוע מחיר יעד.</Text>
@@ -76,6 +78,7 @@ export default function Favorites() {
       keyExtractor={(f) => f.id}
       renderItem={renderItem}
       contentContainerStyle={{ padding: 16, gap: 10 }}
+      ListHeaderComponent={<AlertsBanner />}
       ListFooterComponent={<Text style={{ color: t.muted, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
         המחירים נבדקים כשפותחים את המסך. משיכה למטה מרעננת.</Text>}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await check(); setRefreshing(false); }} />}

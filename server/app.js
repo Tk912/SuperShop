@@ -7,15 +7,12 @@ import { clubs } from './data/clubs.js';
 import { forwarders } from './data/forwarders.js';
 import { searchCatalog } from './search/catalogSearch.js';
 import { productSvg } from './images.js';
-import { collectOffers, activeProviders, searchLiveProducts, isLive } from './providers/index.js';
-import { getStore as getKnownStore, resolveStore } from './storeRegistry.js';
-
-// חנות לפי מזהה; חנות אד-הוק שנשכחה (הפעלה מחדש + הצעות מהמטמון) משוחזרת מפרטי ההצעה
-const storeFor = (offer) => getKnownStore(offer.storeId) ?? (offer.storeHint ? resolveStore(offer.storeHint) : undefined);
-import { evaluateOffer, missedClubSavings } from './pricing/landedCost.js';
-import { getRates, refreshRates } from './pricing/fx.js';
+import { activeProviders, searchLiveProducts, isLive } from './providers/index.js';
+import { compareProduct, dataMode, dealsEnabled } from './compare.js';
+import { getRates } from './pricing/fx.js';
 import { taxConfig } from './pricing/taxConfig.js';
-import { recordPrice, getHistory } from './priceHistory.js';
+import { getHistory } from './priceHistory.js';
+import { listWatches, upsertWatch, removeWatch, checkWatches, isPushToken } from './alerts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,14 +21,18 @@ const productView = (p) => ({
   weightEstimated: !!p.weightEstimated, image: p.image ?? `/img/${p.id}.svg`, live: p.source === 'serpapi',
   fromPrice: p.fromPrice, fromCurrency: p.fromCurrency, fromStore: p.fromStore, rating: p.rating, reviews: p.reviews,
 });
-const dataMode = () => (isLive() && process.env.FORCE_DEMO !== '1' ? 'live' : 'demo');
-// נתוני המועדונים והקופונים עדיין לדוגמה: מופעלים רק במצב דמו, כדי לא להוריד קופון מומצא ממחיר אמיתי.
-const dealsEnabled = () => dataMode() === 'demo' || process.env.SAMPLE_DEALS === '1';
+
 
 export function createApp() {
   const app = express();
   // CORS – לאפליקציית המובייל (Expo web / dev) שרצה על פורט אחר
-  app.use('/api', (_req, res, next) => { res.set('Access-Control-Allow-Origin', '*'); next(); });
+  app.use('/api', (req, res, next) => {
+    res.set({ 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,PUT,DELETE,POST',
+      'Access-Control-Allow-Headers': 'Content-Type' });
+    if (req.method === 'OPTIONS') return res.status(204).end();
+    next();
+  });
+  app.use('/api', express.json({ limit: '10kb' }));
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.get('/img/:id.svg', (req, res) => {
@@ -66,39 +67,33 @@ export function createApp() {
     const product = getProduct(req.params.id);
     if (!product) return res.status(404).json({ error: 'not found' });
     const userClubIds = String(req.query.clubs ?? '').split(',').filter(Boolean);
-    const { rates, source: fxSource } = await refreshRates();
-    const { offers, errors } = await collectOffers(product);
-
-    const evaluated = offers
-      .map((offer) => {
-        const store = storeFor(offer);
-        if (!store) return null;
-        const deals = dealsEnabled();
-        const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals });
-        ev.missedClubs = deals ? missedClubSavings({ offer, product, store, rates, userClubIds }) : [];
-        ev.title = offer.title;
-        ev.inStock = offer.inStock !== false;
-        ev.details = offer.details ?? [];
-        return ev;
-      })
-      .filter((e) => e && e.totalIls != null)
-      .sort((a, b) => (b.inStock - a.inStock) || (a.totalIls - b.totalIls)); // מה שבמלאי קודם, ואז לפי מחיר
-
-    // ההיסטוריה נרשמת לפי מחיר בסיס (בלי הנחות מועדון אישיות) – כדי שתהיה זהה לכל המשתמשים
-    if (dataMode() === 'live') {
-      const base = offers
-        .filter((o) => o.inStock !== false && storeFor(o))
-        .map((offer) => evaluateOffer({ offer, product, store: storeFor(offer), rates, userClubIds: [], deals: dealsEnabled() }))
-        .filter((e) => e.totalIls != null)
-        .sort((a, b) => a.totalIls - b.totalIls)[0];
-      if (base) recordPrice(product.id, base.totalIls, base.storeName);
-    }
+    const { offers: evaluated, errors, rates, fxSource } = await compareProduct(product, userClubIds);
 
     res.json({
       product: productView(product), offers: evaluated, errors, mode: dataMode(), deals: dealsEnabled(), history: getHistory(product.id),
       fx: { rates, source: fxSource }, tax: taxConfig,
     });
   });
+
+  // ---- התראות מחיר. ה-push token של המכשיר משמש גם כמזהה הרשימה שלו ----
+  const wrap = (fn) => async (req, res) => {
+    try { res.json(await fn(req)); } catch (e) { res.status(e.status ?? 500).json({ error: e.message }); }
+  };
+  const tokenOf = (req) => {
+    const t = req.body?.pushToken ?? req.query.pushToken;
+    if (!isPushToken(t)) throw Object.assign(new Error('invalid push token'), { status: 400 });
+    return t;
+  };
+  app.get('/api/watches', wrap(async (req) => ({ watches: listWatches(tokenOf(req)) })));
+  app.put('/api/watches', wrap(async (req) => ({ watch: upsertWatch({ ...req.body, pushToken: tokenOf(req) }) })));
+  app.delete('/api/watches', wrap(async (req) => ({ removed: removeWatch(tokenOf(req), req.query.productId) })));
+
+  // הפעלת בדיקת התראות מבחוץ (למשל cron של שירות האירוח). פעיל רק כשמוגדר ADMIN_TOKEN.
+  app.post('/api/admin/check-alerts', wrap(async (req) => {
+    const ok = process.env.ADMIN_TOKEN && req.get('authorization') === `Bearer ${process.env.ADMIN_TOKEN}`;
+    if (!ok) throw Object.assign(new Error('not found'), { status: 404 });
+    return checkWatches();
+  }));
 
   app.get('/api/meta', (_req, res) => {
     res.json({

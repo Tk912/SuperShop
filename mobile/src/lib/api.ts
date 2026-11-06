@@ -37,6 +37,16 @@ export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors:
 export type SearchResponse = { results: ProductSummary[]; mode: DataMode; errors: ProviderError[] };
 export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode; deals: boolean };
 
+export type Watch = { productId: string; productName: string; targetIls: number | null; baselineIls: number | null; lastNotifiedIls: number | null };
+
+async function send<T>(method: 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`שגיאת שרת (${res.status})`);
+  return res.json() as Promise<T>;
+}
+
 async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { signal });
   if (!res.ok) throw new Error(`שגיאת שרת (${res.status})`);
@@ -48,6 +58,11 @@ export const api = {
   suggest: (q: string, signal?: AbortSignal) =>
     get<{ suggestions: ProductSummary[] }>(`/api/suggest?q=${encodeURIComponent(q)}`, signal).then((r) => r.suggestions),
   search: (q: string) => get<SearchResponse>(`/api/search?q=${encodeURIComponent(q)}`),
+  watches: (pushToken: string) => get<{ watches: Watch[] }>(`/api/watches?pushToken=${encodeURIComponent(pushToken)}`),
+  putWatch: (pushToken: string, w: { productId: string; targetIls?: number | null; baselineIls?: number | null }) =>
+    send<{ watch: Watch }>('PUT', '/api/watches', { pushToken, ...w }),
+  deleteWatch: (pushToken: string, productId: string) =>
+    send<{ removed: number }>('DELETE', `/api/watches?pushToken=${encodeURIComponent(pushToken)}&productId=${encodeURIComponent(productId)}`),
   offers: (id: string, clubs: string[]) =>
     get<OffersResponse>(`/api/products/${encodeURIComponent(id)}/offers?clubs=${clubs.join(',')}`),
 };

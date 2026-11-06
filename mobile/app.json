@@ -54,6 +54,13 @@
             "backgroundColor": "#0b1020"
           }
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4338CA",
+          "defaultChannel": "price-alerts"
+        }
       ]
     ],
     "scheme": "mashve",
