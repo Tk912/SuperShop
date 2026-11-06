@@ -1,0 +1,80 @@
+# פריסת השרת ל-Cloud Run (פרויקט Firebase: supershop-17b37), עם Firestore לאחסון
+# ו-Cloud Scheduler שמפעיל את בדיקת התראות המחיר כל 6 שעות.
+#
+# סודות נדרשים ב-GitHub (Settings → Secrets and variables → Actions):
+#   GCP_SA_KEY     – מפתח JSON של חשבון השירות github-deployer (ראו docs/deploy-firebase.md)
+#   SEARCHAPI_KEY  – המפתח של SearchApi.io
+#   ADMIN_TOKEN    – סיסמה ארוכה לדף ניהול ההנחות ולהפעלת בדיקת ההתראות
+name: Deploy server
+
+on:
+  push:
+    branches: [main]
+    paths: [server/**, public/**, package.json, package-lock.json, Dockerfile, .gcloudignore, .github/workflows/deploy-server.yml]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: supershop-17b37
+  REGION: me-west1            # תל אביב
+  SCHEDULER_REGION: europe-west1
+  SERVICE: supershop-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: npm ci && npm test
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Enable required Google Cloud APIs
+        run: >
+          gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
+          cloudscheduler.googleapis.com firestore.googleapis.com --project "$PROJECT_ID"
+
+      - id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          source: ./
+          env_vars: |
+            NODE_ENV=production
+            STORAGE=firestore
+            ALERTS_INTERVAL_HOURS=0
+            SEARCHAPI_KEY=${{ secrets.SEARCHAPI_KEY }}
+            ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }}
+          # מופע אחד בלבד: הנתונים נשמרים כמסמכים שלמים, ושני מופעים במקביל עלולים לדרוס זה את זה
+          flags: --allow-unauthenticated --max-instances=1 --memory=512Mi --cpu=1 --timeout=300
+
+      - name: Schedule price-alert checks (every 6 hours)
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          ARGS=(--project "$PROJECT_ID" --location "$SCHEDULER_REGION" --schedule "0 */6 * * *" --time-zone "Asia/Jerusalem"
+                --uri "$URL/api/admin/check-alerts" --http-method POST --attempt-deadline 300s)
+          if gcloud scheduler jobs describe supershop-alerts --project "$PROJECT_ID" --location "$SCHEDULER_REGION" >/dev/null 2>&1; then
+            gcloud scheduler jobs update http supershop-alerts "${ARGS[@]}" --update-headers "Authorization=Bearer $ADMIN_TOKEN"
+          else
+            gcloud scheduler jobs create http supershop-alerts "${ARGS[@]}" --headers "Authorization=Bearer $ADMIN_TOKEN"
+          fi
+
+      - name: Smoke test
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          curl -fsS "$URL/api/meta" | head -c 300; echo
+          echo "### השרת פעיל: $URL" >> "$GITHUB_STEP_SUMMARY"

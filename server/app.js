@@ -13,6 +13,7 @@ import { compareProduct, dataMode, dealsEnabled } from './compare.js';
 import { getRates } from './pricing/fx.js';
 import { taxConfig } from './pricing/taxConfig.js';
 import { getHistory } from './priceHistory.js';
+import { flush } from './storage.js';
 import { listWatches, upsertWatch, removeWatch, checkWatches, isPushToken } from './alerts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,12 @@ export function createApp() {
     next();
   });
   app.use('/api', express.json({ limit: '200kb' }));
+  // כותבים לאחסון לפני שהתשובה יוצאת: ב-Cloud Run המעבד מואט אחרי התשובה, וכתיבה מאוחרת עלולה ללכת לאיבוד
+  app.use('/api', (_req, res, next) => {
+    const json = res.json.bind(res);
+    res.json = (body) => { flush().finally(() => json(body)); return res; };
+    next();
+  });
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.get('/img/:id.svg', (req, res) => {

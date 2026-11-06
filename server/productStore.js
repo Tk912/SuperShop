@@ -1,26 +1,23 @@
 // מאגר מוצרים: קטלוג הדוגמה + מוצרים "נלמדים" שהגיעו מחיפושים חיים.
 // כל חיפוש חי מוסיף מוצרים למאגר, כך שההשלמה האוטומטית משתפרת בלי לבזבז בקשות API.
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { products as demoProducts } from './data/catalog.js';
+import { doc } from './storage.js';
 
 const FILE = process.env.LEARNED_FILE
   ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'learned-products.json');
 const MAX_LEARNED = 5000;
 
+const store = doc('learned-products', () => [], FILE);
 const learned = new Map();
-try {
-  for (const p of JSON.parse(fs.readFileSync(FILE, 'utf8'))) learned.set(p.id, p);
-} catch { /* עדיין אין מוצרים נלמדים */ }
+const rebuild = (arr) => { learned.clear(); for (const p of arr ?? []) learned.set(p.id, p); };
+rebuild(store.value);
+store.onLoad = rebuild; // במצב Firestore הנתונים נטענים אחרי ההפעלה
 
-let saveTimer;
 function persist() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { fs.mkdirSync(path.dirname(FILE), { recursive: true }); fs.writeFileSync(FILE, JSON.stringify([...learned.values()])); } catch { /* זיכרון בלבד */ }
-  }, 200);
-  saveTimer.unref?.();
+  store.value = [...learned.values()];
+  store.save();
 }
 
 const demoById = new Map(demoProducts.map((p) => [p.id, p]));

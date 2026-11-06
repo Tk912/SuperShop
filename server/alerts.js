@@ -4,11 +4,11 @@
 //  • יש מחיר יעד, והמחיר הזול עד הבית ירד אליו או מתחתיו.
 //  • אין מחיר יעד, והמחיר ירד לפחות DROP_PCT מהמחיר בזמן השמירה.
 //  ובשני המקרים – רק אם המחיר נמוך מזה שכבר דווח (בלי הצפה של התראות על אותו מחיר).
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getProduct } from './productStore.js';
 import { compareProduct } from './compare.js';
+import { doc } from './storage.js';
 
 const FILE = process.env.WATCHES_FILE
   ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'watches.json');
@@ -16,27 +16,24 @@ const DROP_PCT = Number(process.env.ALERT_DROP_PCT ?? 3) / 100;
 const PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const MAX_WATCHES_PER_DEVICE = 100;
 
-let watches = [];
-try { watches = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { /* אין עדיין */ }
-const persist = () => {
-  try { fs.mkdirSync(path.dirname(FILE), { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(watches)); } catch { /* זיכרון בלבד */ }
-};
+const store = doc('watches', () => [], FILE);
+const persist = () => store.save();
 
 export const isPushToken = (t) => /^Expo(nent)?PushToken\[[\w-]+\]$/.test(String(t ?? ''));
 
 export function listWatches(pushToken) {
-  return watches.filter((w) => w.pushToken === pushToken);
+  return store.value.filter((w) => w.pushToken === pushToken);
 }
 
 export function upsertWatch({ pushToken, productId, targetIls, baselineIls }) {
   if (!isPushToken(pushToken)) throw Object.assign(new Error('invalid push token'), { status: 400 });
   const product = getProduct(productId);
   if (!product) throw Object.assign(new Error('unknown product'), { status: 404 });
-  let w = watches.find((x) => x.pushToken === pushToken && x.productId === productId);
+  let w = store.value.find((x) => x.pushToken === pushToken && x.productId === productId);
   if (!w) {
     if (listWatches(pushToken).length >= MAX_WATCHES_PER_DEVICE) throw Object.assign(new Error('too many watches'), { status: 429 });
     w = { pushToken, productId, createdAt: Date.now(), lastNotifiedIls: null };
-    watches.push(w);
+    store.value.push(w);
   }
   Object.assign(w, {
     productName: product.name,
@@ -48,10 +45,10 @@ export function upsertWatch({ pushToken, productId, targetIls, baselineIls }) {
 }
 
 export function removeWatch(pushToken, productId) {
-  const before = watches.length;
-  watches = watches.filter((w) => !(w.pushToken === pushToken && (productId == null || w.productId === productId)));
+  const before = store.value.length;
+  store.value = store.value.filter((w) => !(w.pushToken === pushToken && (productId == null || w.productId === productId)));
   persist();
-  return before - watches.length;
+  return before - store.value.length;
 }
 
 /** האם לשלוח התראה, ואיזו. פונקציה טהורה – נבדקת בנפרד. */
@@ -97,7 +94,7 @@ export async function sendPush(messages, { fetchImpl = fetch } = {}) {
  * @returns סיכום הריצה
  */
 export async function checkWatches({ compare = compareProduct, send = sendPush } = {}) {
-  const byProduct = Map.groupBy(watches, (w) => w.productId);
+  const byProduct = Map.groupBy(store.value, (w) => w.productId);
   const summary = { products: byProduct.size, sent: 0, removed: 0, errors: [] };
   const messages = [];
   const pending = [];

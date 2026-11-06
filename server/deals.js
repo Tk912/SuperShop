@@ -4,30 +4,26 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { doc, storageKind } from './storage.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SEED = path.join(here, 'data', 'deals.json');
 const FILE = process.env.DEALS_FILE ?? SEED;
 const STATUSES = ['sample', 'pending', 'verified'];
 
-function load() {
-  try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { /* קובץ חדש בשרת – מתחילים מהזרע */ }
-  return JSON.parse(fs.readFileSync(SEED, 'utf8'));
-}
+// בפעם הראשונה (אין עדיין נתונים באחסון) מתחילים מהזרע שבקוד
+const store = doc('deals', () => JSON.parse(fs.readFileSync(SEED, 'utf8')), FILE);
+const D = () => { store.value.reports ??= {}; return store.value; }; // id → מספר דיווחים "לא עבד" מאז האימות האחרון
 
-let db = load();
-db.reports ??= {}; // id → מספר דיווחים "לא עבד" מאז האימות האחרון
-
-const writable = () => FILE !== SEED || process.env.DEALS_WRITE_SEED === '1';
+// במצב קבצים לא דורסים את קובץ הזרע שבקוד, אלא אם ביקשו במפורש
+const writable = () => storageKind() !== 'file' || FILE !== SEED || process.env.DEALS_WRITE_SEED === '1';
 function persist() {
-  if (!writable()) return;
-  fs.mkdirSync(path.dirname(FILE), { recursive: true });
-  fs.writeFileSync(FILE, JSON.stringify(db, null, 1) + '\n');
+  if (writable()) store.save();
 }
 
-export const getClubs = () => db.clubs;
-export const getCoupons = () => db.coupons;
-export const getDeals = () => db;
+export const getClubs = () => D().clubs;
+export const getCoupons = () => D().coupons;
+export const getDeals = () => D();
 
 const today = () => new Date().toISOString().slice(0, 10);
 export const isLiveDeal = (d, now = today()) => d.status === 'verified' && (!d.expires || d.expires >= now);
@@ -38,7 +34,7 @@ export function dealFilter({ live, includeSamples = false }) {
   return (d) => isLiveDeal(d);
 }
 
-export const hasLiveDeals = () => db.clubs.some((c) => c.rules.some((r) => isLiveDeal(r))) || db.coupons.some((c) => isLiveDeal(c));
+export const hasLiveDeals = () => D().clubs.some((c) => c.rules.some((r) => isLiveDeal(r))) || D().coupons.some((c) => isLiveDeal(c));
 
 function validate(next) {
   const errors = [];
@@ -71,6 +67,7 @@ function validate(next) {
 export function saveDeals(next) {
   const errors = validate(next);
   if (errors.length) throw Object.assign(new Error(errors.join('; ')), { status: 400 });
+  const db = D();
   const prev = new Map([...db.clubs.flatMap((c) => c.rules), ...db.coupons].map((d) => [d.id, d]));
   for (const d of [...next.clubs.flatMap((c) => c.rules), ...next.coupons]) {
     if (d.status === 'verified' && (prev.get(d.id)?.status !== 'verified' || !d.verifiedAt)) {
@@ -78,13 +75,14 @@ export function saveDeals(next) {
       delete db.reports[d.id];
     }
   }
-  db = { _note: db._note, clubs: next.clubs, coupons: next.coupons, reports: db.reports };
+  store.value = { _note: db._note, clubs: next.clubs, coupons: next.coupons, reports: db.reports };
   persist();
-  return db;
+  return store.value;
 }
 
 /** דיווח משתמש: "ההנחה/הקופון לא עבדו". נספר לפי id ומוצג בדף הניהול. */
 export function reportDeal(id) {
+  const db = D();
   const exists = [...db.clubs.flatMap((c) => c.rules), ...db.coupons].some((d) => d.id === id);
   if (!exists) throw Object.assign(new Error('unknown deal'), { status: 404 });
   db.reports[id] = (db.reports[id] ?? 0) + 1;

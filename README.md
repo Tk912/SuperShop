@@ -54,12 +54,13 @@ SEARCHAPI_KEY=<המפתח שלכם> npm start
 
 | משתנה | מה הוא עושה |
 |---|---|
-| `ALERTS_INTERVAL_HOURS` | כל כמה שעות לבדוק. 0 או לא מוגדר = כבוי (ב-Dockerfile: 6) |
+| `ALERTS_INTERVAL_HOURS` | כל כמה שעות לבדוק מתוך השרת. 0 או לא מוגדר = כבוי. ב-Cloud Run הוא כבוי, ו-Cloud Scheduler מפעיל את הבדיקה |
+| `STORAGE` | `firestore` = שמירה ב-Firestore. ברירת המחדל: קבצים מקומיים |
 | `ADMIN_TOKEN` | מפעיל את `POST /api/admin/check-alerts` עם `Authorization: Bearer <token>`, לבדיקה ידנית או מ-cron חיצוני |
 | `EXPO_ACCESS_TOKEN` | אופציונלי: אם הפעלתם "Enhanced Security for Push" ב-Expo |
 
 **מה צריך כדי שזה יעבוד בטלפון:**
-1. להעלות את השרת לענן (יש `Dockerfile`; לחבר דיסק קבוע ל-`/data`). כדאי לבחור שירות שמריץ את השרת כל הזמן, כי שירות שמרדים אותו לא יריץ את הבדיקה התקופתית.
+1. לפרוס את השרת. ההוראות ל-Firebase / Cloud Run נמצאות ב-[`docs/deploy-firebase.md`](docs/deploy-firebase.md). שם Cloud Scheduler מפעיל את הבדיקה התקופתית.
 2. בתיקיית `mobile`: `npx eas-cli@latest init`. הפקודה יוצרת פרויקט EAS ומוסיפה ל-`app.json` את המזהה שנדרש ל-push token.
 3. לבנות את האפליקציה עם `EXPO_PUBLIC_API_URL=<כתובת השרת>`. ב-Android צריך גם להגדיר FCM ב-EAS credentials.
 

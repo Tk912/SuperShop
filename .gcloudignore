@@ -1,0 +1,8 @@
+# מה לא נשלח לבנייה ב-Cloud Build (השרת בלבד; האפליקציה נבנית ב-Expo)
+.git
+.github
+node_modules
+mobile
+test
+.cache
+*.md
