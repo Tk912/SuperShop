@@ -19,7 +19,7 @@ function CouponCode({ code, t }: { code: string; t: Theme }) {
   );
 }
 
-export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
+export function OfferCard({ o, isBest, deals = true }: { o: Offer; isBest: boolean; deals?: boolean }) {
   const t = useTheme();
   const [expanded, setExpanded] = useState(false);
   const b = o.best;
@@ -52,7 +52,7 @@ export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
 
       {/* הנחות */}
       <View style={{ gap: 6, marginTop: 10 }}>
-        {o.discounts.applied.length === 0 && <Text style={{ color: t.muted, fontSize: 13 }}>אין הנחה זמינה עבורך</Text>}
+        {deals && o.discounts.applied.length === 0 && <Text style={{ color: t.muted, fontSize: 13 }}>אין הנחה זמינה עבורך</Text>}
         {o.discounts.applied.map((d, i) => (
           <View key={i} style={styles.discRow}>
             <Text style={{ color: t.good, fontSize: 14 }}>
@@ -63,7 +63,7 @@ export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
           </View>
         ))}
         <Text style={{ color: t.muted, fontSize: 13 }}>
-          🚚 {b.name}: {b.shippingIls ? ils(b.shippingIls) : 'חינם'} · {b.days} ימים · {taxLine}
+          🚚 {b.name}: {b.shippingIls ? ils(b.shippingIls) : 'חינם'}{b.days && b.days !== '?' ? ` · ${b.days} ימים` : ''} · {taxLine}
         </Text>
       </View>
 
@@ -100,7 +100,7 @@ export function OfferCard({ o, isBest }: { o: Offer; isBest: boolean }) {
                 <Text style={{ color: i === 0 ? t.good : t.ink, fontWeight: '800' }}>{ils(r.totalIls)}</Text>
               </View>
               <Text style={{ color: t.muted, fontSize: 12 }}>
-                משלוח {r.shippingIls ? ils(r.shippingIls) : 'חינם'} · מע״מ {ils(r.taxes.vatIls)} · מכס {ils(r.taxes.dutyIls)} · עמלות {ils(r.taxes.feeIls)} · {r.days} ימים
+                משלוח {r.shippingIls ? ils(r.shippingIls) : 'חינם'} · מע״מ {ils(r.taxes.vatIls)} · מכס {ils(r.taxes.dutyIls)} · עמלות {ils(r.taxes.feeIls)}{r.days && r.days !== '?' ? ` · ${r.days} ימים` : ''}
               </Text>
               {r.note && <Text style={{ color: t.muted, fontSize: 12 }}>{r.note}{r.chargeableKg ? ` · משקל מחויב ${r.chargeableKg} ק״ג` : ''}</Text>}
             </View>

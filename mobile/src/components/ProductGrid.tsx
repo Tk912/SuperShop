@@ -11,7 +11,7 @@ export function ProductGrid({ items }: { items: ProductSummary[] }) {
       {items.map((p) => (
         <Link key={p.id} href={{ pathname: '/product/[id]', params: { id: p.id } }} asChild>
           <Pressable style={StyleSheet.flatten([styles.tile, { backgroundColor: t.card, borderColor: t.line }])}>
-            <Image source={{ uri: imageUrl(p.image) }} style={styles.img} contentFit="cover" />
+            <Image source={{ uri: imageUrl(p.image) }} style={[styles.img, { backgroundColor: t.bg }]} contentFit="contain" />
             <Text style={[styles.name, { color: t.ink }]} numberOfLines={2}>{p.name}</Text>
             {p.fromPrice != null && (
               <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }} numberOfLines={1}>

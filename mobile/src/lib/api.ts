@@ -30,10 +30,12 @@ export type Offer = {
   routes: Route[]; best: Route; totalIls: number; missedClubs: Discount[]; inStock: boolean; details: string[];
 };
 export type ProviderError = { provider: string; error: string };
-export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors: ProviderError[]; mode: DataMode;
+export type PricePoint = { d: string; p: number; s: string };
+export type History = { points: PricePoint[]; lowest: PricePoint | null; highest: PricePoint | null; days: number };
+export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors: ProviderError[]; mode: DataMode; deals: boolean; history?: History;
   fx: { rates: Record<string, number>; source: string } };
 export type SearchResponse = { results: ProductSummary[]; mode: DataMode; errors: ProviderError[] };
-export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode };
+export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode; deals: boolean };
 
 async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { signal });

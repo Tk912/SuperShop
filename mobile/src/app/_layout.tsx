@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { ClubsProvider } from '../lib/clubs';
+import { FavoritesProvider } from '../lib/favorites';
 import { useTheme } from '../lib/theme';
 
 export default function RootLayout() {
@@ -14,6 +15,7 @@ export default function RootLayout() {
 
   return (
     <ClubsProvider>
+      <FavoritesProvider>
       <StatusBar style="auto" />
       <Stack screenOptions={{
         headerStyle: { backgroundColor: t.card }, headerTintColor: t.ink, headerTitleStyle: { fontWeight: '700' },
@@ -23,7 +25,10 @@ export default function RootLayout() {
         <Stack.Screen name="search" options={{ title: 'תוצאות חיפוש' }} />
         <Stack.Screen name="product/[id]" options={{ title: 'השוואת מחירים' }} />
         <Stack.Screen name="clubs" options={{ title: 'המועדונים שלי', presentation: 'modal' }} />
+        <Stack.Screen name="favorites" options={{ title: 'במעקב מחיר' }} />
+        <Stack.Screen name="scan" options={{ title: 'סריקת ברקוד', presentation: 'fullScreenModal' }} />
       </Stack>
+      </FavoritesProvider>
     </ClubsProvider>
   );
 }

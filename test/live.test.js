@@ -11,6 +11,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mashve-'));
 process.env.SERPAPI_FIXTURE_DIR = path.join(here, 'fixtures', 'serpapi');
 process.env.CACHE_DIR = path.join(tmp, 'cache');
 process.env.LEARNED_FILE = path.join(tmp, 'learned.json');
+process.env.HISTORY_FILE = path.join(tmp, 'history.json');
 process.env.FX_OFFLINE = '1';
 
 let app;
@@ -78,4 +79,36 @@ test('במצב חי אין מחירי דוגמה מעורבבים', async () => 
   const r = await get('/api/products/sony-wh1000xm6/offers'); // מוצר קטלוג → מחפש אותו ב-Google
   assert.ok(r.offers.length > 0);
   assert.ok(r.offers.every((o) => o.source === 'serpapi'));
+});
+
+test('היסטוריית מחירים נרשמת במצב חי ומוחזרת עם ההשוואה', async () => {
+  const r1 = await get('/api/products/g:1111111111111111111/offers?clubs=behatzdaa');
+  const r2 = await get('/api/products/g:1111111111111111111/offers');
+  assert.equal(r2.history.points.length, 1); // נקודה אחת ליום
+  assert.ok(r2.history.lowest.p > 0);
+  // ההיסטוריה לפי מחיר בסיס – לא מושפעת מהמועדון של המשתמש
+  assert.equal(r1.history.lowest?.p ?? r2.history.lowest.p, r2.history.lowest.p);
+});
+
+test('יום חדש מוסיף נקודה, ומחיר זול יותר באותו יום מחליף', async () => {
+  const { recordPrice, getHistory } = await import('../server/priceHistory.js');
+  const d1 = new Date('2026-11-01T10:00:00Z');
+  const d2 = new Date('2026-11-02T10:00:00Z');
+  recordPrice('t1', 500, 'A', d1);
+  recordPrice('t1', 480, 'B', d1);
+  recordPrice('t1', 490, 'A', d1);
+  recordPrice('t1', 470, 'C', d2);
+  const h = getHistory('t1', 30, d2);
+  assert.deepEqual(h.points.map((x) => x.p), [480, 470]);
+  assert.equal(h.lowest.s, 'C');
+});
+
+test('במצב חי, הנחות וקופונים לדוגמה לא יורדים ממחיר אמיתי', async () => {
+  await get('/api/search?q=' + encodeURIComponent('sony xm6'));
+  const r = await get('/api/products/g:1111111111111111111/offers?clubs=behatzdaa,hever');
+  assert.equal(r.deals, false);
+  const ksp = r.offers.find((o) => o.storeName === 'KSP');
+  assert.equal(ksp.discounts.totalIls, 0);
+  assert.equal(ksp.totalIls, 1549); // מחיר החנות + משלוח חינם, בלי KSP50 המומצא
+  assert.deepEqual(ksp.missedClubs, []);
 });

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { ErrorState } from '../../components/ErrorState';
 import { OfferCard } from '../../components/OfferCard';
+import { PriceWatch } from '../../components/PriceWatch';
 import { api, imageUrl, type OffersResponse } from '../../lib/api';
 import { useClubs } from '../../lib/clubs';
 import { catName, ils, useTheme } from '../../lib/theme';
@@ -63,12 +64,18 @@ export default function Product() {
         </View>
       )}
 
-      <Link href="/clubs" asChild>
-        <Pressable style={StyleSheet.flatten([styles.clubsBtn, { borderColor: t.line, backgroundColor: t.card }])}>
-          <Text style={{ color: t.ink }}>🎖️ המועדונים שלי: {myClubs.length ? `${myClubs.length} פעילים` : 'לא נבחרו'}</Text>
-          <Text style={{ color: t.brand }}>עריכה</Text>
-        </Pressable>
-      </Link>
+      <PriceWatch key={data.product.id} data={data} />
+
+      {data.deals ? (
+        <Link href="/clubs" asChild>
+          <Pressable style={StyleSheet.flatten([styles.clubsBtn, { borderColor: t.line, backgroundColor: t.card }])}>
+            <Text style={{ color: t.ink }}>🎖️ המועדונים שלי: {myClubs.length ? `${myClubs.length} פעילים` : 'לא נבחרו'}</Text>
+            <Text style={{ color: t.brand }}>עריכה</Text>
+          </Pressable>
+        </Link>
+      ) : (
+        <Text style={{ color: t.muted, fontSize: 13 }}>🎖️ הנחות מועדונים וקופונים עוד לא מחושבות במחירים האמיתיים – בקרוב.</Text>
+      )}
 
       {data.errors.length > 0 && <Text style={{ color: t.warn }}>חלק מהספקים לא הגיבו: {data.errors.map((e) => e.provider).join(', ')}</Text>}
 
@@ -89,7 +96,7 @@ export default function Product() {
       <FlatList
         data={offers}
         keyExtractor={(o, i) => `${o.storeId}-${i}`}
-        renderItem={({ item }) => <OfferCard o={item} isBest={item === best} />}
+        renderItem={({ item }) => <OfferCard o={item} isBest={item === best} deals={data.deals} />}
         ListHeaderComponent={header}
         ListEmptyComponent={<Text style={{ color: t.muted, textAlign: 'center' }}>
           {data.offers.length ? 'אין הצעות בסינון זה.' : 'לא נמצאו חנויות שמוכרות את המוצר כרגע.'}</Text>}

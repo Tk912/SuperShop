@@ -98,12 +98,13 @@ export function importTaxes(itemIls, shippingIls, category, rates, { prepaidHand
  * @param offer {storeId, price, currency?, url?}
  * @returns אובייקט עם כל מסלולי המשלוח, ההנחות והעלות הסופית הזולה ביותר.
  */
-export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date() }) {
+// deals=false מכבה הנחות מועדון וקופונים (למשל כשנתוני ההנחות הם לדוגמה והמחירים אמיתיים)
+export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date(), deals = true }) {
   const currency = offer.currency ?? store.currency;
   const priceIls = toIls(offer.price, currency, rates);
 
-  const clubOpts = applicableClubRules(store, product, priceIls, userClubIds);
-  const couponOpts = applicableCoupons(store, product, offer.price, rates, now);
+  const clubOpts = deals ? applicableClubRules(store, product, priceIls, userClubIds) : [];
+  const couponOpts = deals ? applicableCoupons(store, product, offer.price, rates, now) : [];
   const discount = bestDiscount(clubOpts, couponOpts, priceIls);
   const itemIls = priceIls - discount.totalIls;
   const itemInStoreCur = fromIls(itemIls, currency, rates);

@@ -12,6 +12,7 @@ import { getStore } from './storeRegistry.js';
 import { evaluateOffer, missedClubSavings } from './pricing/landedCost.js';
 import { getRates, refreshRates } from './pricing/fx.js';
 import { taxConfig } from './pricing/taxConfig.js';
+import { recordPrice, getHistory } from './priceHistory.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,6 +22,8 @@ const productView = (p) => ({
   fromPrice: p.fromPrice, fromCurrency: p.fromCurrency, fromStore: p.fromStore, rating: p.rating, reviews: p.reviews,
 });
 const dataMode = () => (isLive() && process.env.FORCE_DEMO !== '1' ? 'live' : 'demo');
+// נתוני המועדונים והקופונים עדיין לדוגמה: מופעלים רק במצב דמו, כדי לא להוריד קופון מומצא ממחיר אמיתי.
+const dealsEnabled = () => dataMode() === 'demo' || process.env.SAMPLE_DEALS === '1';
 
 export function createApp() {
   const app = express();
@@ -67,8 +70,9 @@ export function createApp() {
       .map((offer) => {
         const store = getStore(offer.storeId);
         if (!store) return null;
-        const ev = evaluateOffer({ offer, product, store, rates, userClubIds });
-        ev.missedClubs = missedClubSavings({ offer, product, store, rates, userClubIds });
+        const deals = dealsEnabled();
+        const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals });
+        ev.missedClubs = deals ? missedClubSavings({ offer, product, store, rates, userClubIds }) : [];
         ev.title = offer.title;
         ev.inStock = offer.inStock !== false;
         ev.details = offer.details ?? [];
@@ -77,8 +81,18 @@ export function createApp() {
       .filter((e) => e && e.totalIls != null)
       .sort((a, b) => (b.inStock - a.inStock) || (a.totalIls - b.totalIls)); // מה שבמלאי קודם, ואז לפי מחיר
 
+    // ההיסטוריה נרשמת לפי מחיר בסיס (בלי הנחות מועדון אישיות) – כדי שתהיה זהה לכל המשתמשים
+    if (dataMode() === 'live') {
+      const base = offers
+        .filter((o) => o.inStock !== false && getStore(o.storeId))
+        .map((offer) => evaluateOffer({ offer, product, store: getStore(offer.storeId), rates, userClubIds: [] }))
+        .filter((e) => e.totalIls != null)
+        .sort((a, b) => a.totalIls - b.totalIls)[0];
+      if (base) recordPrice(product.id, base.totalIls, base.storeName);
+    }
+
     res.json({
-      product: productView(product), offers: evaluated, errors, mode: dataMode(),
+      product: productView(product), offers: evaluated, errors, mode: dataMode(), deals: dealsEnabled(), history: getHistory(product.id),
       fx: { rates, source: fxSource }, tax: taxConfig,
     });
   });
@@ -86,7 +100,7 @@ export function createApp() {
   app.get('/api/meta', (_req, res) => {
     res.json({
       clubs: clubs.map(({ id, name, description }) => ({ id, name, description })),
-      forwarders, providers: activeProviders().map(({ id, name }) => ({ id, name })), mode: dataMode(),
+      forwarders, providers: activeProviders().map(({ id, name }) => ({ id, name })), mode: dataMode(), deals: dealsEnabled(),
       popular: products.slice(0, 10).map(productView), fx: getRates(),
     });
   });

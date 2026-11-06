@@ -68,7 +68,7 @@ export function SearchBox({ initial = '', autoFocus = false }: { initial?: strin
           {items.map((p) => (
             <Pressable key={p.id} onPress={() => pick(p)}
               style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.brandSoft }]}>
-              <Image source={{ uri: imageUrl(p.image) }} style={styles.thumb} contentFit="cover" />
+              <Image source={{ uri: imageUrl(p.image) }} style={[styles.thumb, { backgroundColor: t.bg }]} contentFit="cover" />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.name, { color: t.ink }]} numberOfLines={1}>{p.name}</Text>
                 <Text style={{ color: t.muted, fontSize: 13 }}>{p.brand} · {catName(p.category)}</Text>

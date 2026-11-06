@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#4338CA",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -33,8 +33,31 @@
           "supportsRTL": true,
           "forcesRTL": true
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "משווה משתמשת במצלמה כדי לסרוק ברקוד של מוצר ולהשוות את המחיר שלו.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#0b1020"
+          }
+        }
       ]
     ],
-    "scheme": "mashve"
+    "scheme": "mashve",
+    "description": "משווה – השוואת מחירים עד הבית: חנויות בישראל ובחו״ל, מועדוני הנחות, קופונים, משלוח ומסים.",
+    "primaryColor": "#4338CA"
   }
 }
