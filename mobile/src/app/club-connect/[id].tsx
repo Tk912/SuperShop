@@ -1,4 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { WebView as RNWebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
@@ -16,6 +17,8 @@ const WebView = RNWebView as unknown as ComponentType<WebViewProps & { ref?: Ref
 // בטלפון), עובר לעמוד ההטבות ולוחץ "ייבוא". במצב סנכרון (sync=1) האפליקציה עוברת לבד על העמודים שיובאו.
 export default function ClubConnect() {
   const t = useTheme();
+  // באנדרואיד החדש האפליקציה מצוירת עד קצה המסך – בלי זה הכפתורים נופלים מתחת לכפתורי הניווט של הטלפון
+  const insets = useSafeAreaInsets();
   const { id, sync } = useLocalSearchParams<{ id: string; sync?: string }>();
   const { meta } = useMeta();
   const { accounts, importPage } = useClubAccounts();
@@ -148,7 +151,7 @@ export default function ClubConnect() {
         style={{ flex: 1 }}
       />
       {status && <View style={[styles.status, { backgroundColor: tone.bg }]}><Text style={{ color: tone.fg, fontSize: 13 }}>{status.text}</Text></View>}
-      <View style={[styles.bar, { backgroundColor: t.card, borderColor: t.line }]}>
+      <View style={[styles.bar, { backgroundColor: t.card, borderColor: t.line, paddingBottom: 12 + insets.bottom }]}>
         <Pressable onPress={extract} disabled={busy} style={[styles.primary, { backgroundColor: t.brand, opacity: busy ? 0.7 : 1 }]}>
           {busy
             ? <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><ActivityIndicator color="#fff" /><Text style={{ color: '#fff', fontWeight: '700' }}>קורא הטבות…</Text></View>

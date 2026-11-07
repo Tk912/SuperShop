@@ -5,10 +5,12 @@ import { ErrorState } from '../components/ErrorState';
 import { ProductGrid } from '../components/ProductGrid';
 import { SearchBox } from '../components/SearchBox';
 import { api, type SearchResponse } from '../lib/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/theme';
 
 export default function Search() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { q = '' } = useLocalSearchParams<{ q: string }>();
   // התוצאה נשמרת יחד עם השאילתה שלה, כך שמעבר לשאילתה חדשה מציג טעינה בלי איפוס סינכרוני
   const [res, setRes] = useState<{ q: string; data?: SearchResponse; error?: string } | null>(null);
@@ -27,7 +29,7 @@ export default function Search() {
   const load = () => { setRes(null); setAttempt((a) => a + 1); };
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 + insets.bottom }}>
       <SearchBox initial={q} />
       {error ? <ErrorState message={error} onRetry={load} />
         : !items ? <ActivityIndicator color={t.brand} />

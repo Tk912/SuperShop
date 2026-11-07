@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import { ils, useTheme } from '../lib/theme';
 // המועדפים: בודק מחיר עדכני לכל מוצר ומסמן ירידות מחיר והגעה למחיר היעד.
 export default function Favorites() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { favorites, remove } = useFavorites();
   const [prices, setPrices] = useState<Record<string, number | null>>({});
   const [refreshing, setRefreshing] = useState(false);
@@ -77,7 +79,7 @@ export default function Favorites() {
       data={favorites}
       keyExtractor={(f) => f.id}
       renderItem={renderItem}
-      contentContainerStyle={{ padding: 16, gap: 10 }}
+      contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 32 + insets.bottom }}
       ListHeaderComponent={<AlertsBanner />}
       ListFooterComponent={<Text style={{ color: t.muted, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
         המחירים נבדקים כשפותחים את המסך. משיכה למטה מרעננת.</Text>}

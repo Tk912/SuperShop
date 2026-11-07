@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ const FILTERS: [Filter, string][] = [['all', 'הכל'], ['local', 'ישראל'],
 
 export default function Product() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { myClubs, ready } = useClubs();
   const { personalParam, accounts } = useClubAccounts();
@@ -107,7 +109,7 @@ export default function Product() {
           שער דולר ₪{data.fx.rates.USD.toFixed(3)} ({data.fx.source === 'live' ? 'עדכני' : 'קבוע'}) ·{' '}
           {data.mode === 'live' ? 'מחירים מ-Google Shopping, ייתכנו שינויים באתר החנות' : 'נתוני דוגמה'} · המסים הם הערכה
         </Text>}
-        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 + insets.bottom }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchOffers(); setRefreshing(false); }} />}
       />
     </>

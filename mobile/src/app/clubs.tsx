@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -21,6 +22,7 @@ const dmy = (d: string | null) => (d ? d.split('-').reverse().slice(0, 2).join('
 
 export default function Clubs() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { myClubs, toggle } = useClubs();
   const { accounts } = useClubAccounts();
   const [clubs, setClubs] = useState<ClubInfo[] | null>(null);
@@ -69,7 +71,7 @@ export default function Clubs() {
 
   const sorted = [...clubs].sort((a, b) => Number(b.primary) - Number(a.primary));
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 + insets.bottom }} keyboardShouldPersistTaps="handled">
       <Text style={{ color: t.muted }}>
         התחברו פעם אחת לחשבון שלכם במועדון, והאפליקציה תציג את כל ההטבות והמבצעים שלכם. הטבות בחנויות שבהשוואה ייכנסו אוטומטית למחיר עד הבית.
       </Text>
