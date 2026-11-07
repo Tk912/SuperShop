@@ -18,6 +18,17 @@ import { listWatches, upsertWatch, removeWatch, checkWatches, isPushToken } from
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// הטבות מהחשבון של המשתמש במועדון: personal=behatzdaa.ksp.8,pais-plus.bug.5.500 (מועדון.חנות.אחוז[.מינימום])
+export function parsePersonal(raw) {
+  const clubs = new Map(getClubs().map((c) => [c.id, c.name]));
+  const known = new Set(stores.map((s) => s.id));
+  return String(raw ?? '').split(',').slice(0, 50).map((x) => x.split('.')).flatMap(([clubId, storeId, pct, min]) => {
+    const percent = Number(pct);
+    if (!clubs.has(clubId) || !known.has(storeId) || !(percent > 0 && percent <= 50)) return [];
+    return [{ clubId, clubName: clubs.get(clubId), storeId, percent, minSpend: Number(min) > 0 ? Number(min) : null }];
+  });
+}
+
 const productView = (p) => ({
   id: p.id, name: p.name, brand: p.brand, category: p.category, weightKg: p.weightKg,
   weightEstimated: !!p.weightEstimated, image: p.image ?? `/img/${p.id}.svg`, live: p.source === 'serpapi' || p.source === 'searchapi',
@@ -75,7 +86,8 @@ export function createApp() {
     const product = getProduct(req.params.id);
     if (!product) return res.status(404).json({ error: 'not found' });
     const userClubIds = String(req.query.clubs ?? '').split(',').filter(Boolean);
-    const { offers: evaluated, errors, rates, fxSource } = await compareProduct(product, userClubIds);
+    const personal = parsePersonal(req.query.personal);
+    const { offers: evaluated, errors, rates, fxSource } = await compareProduct(product, userClubIds, personal);
 
     res.json({
       product: productView(product), offers: evaluated, errors, mode: dataMode(), deals: dealsEnabled(), history: getHistory(product.id),
@@ -124,7 +136,7 @@ export function createApp() {
       clubs: getClubs().map((c) => {
         const active = c.rules.filter(filter);
         return { id: c.id, name: c.name, description: c.description, eligibility: c.eligibility ?? null, payment: c.payment ?? null,
-          sources: c.sources ?? [], primary: !!c.primarySource, benefitsCount: active.length,
+          sources: c.sources ?? [], primary: !!c.primarySource, benefitsCount: active.length, connect: c.connect ?? null,
           stores: [...new Set(active.map((r) => storeName(r.storeId)))] };
       }),
     };
@@ -158,6 +170,7 @@ export function createApp() {
     res.json({
       clubs: getClubs().map(({ id, name, description, eligibility }) => ({ id, name, description, eligibility })),
       forwarders, providers: activeProviders().map(({ id, name }) => ({ id, name })), mode: dataMode(), deals: dealsEnabled(),
+      stores: stores.map(({ id, name, aliases = [], type }) => ({ id, name, aliases, type })),
       popular: products.slice(0, 10).map(productView), fx: getRates(),
     });
   });

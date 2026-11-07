@@ -21,7 +21,7 @@ export type Club = { id: string; name: string; description: string; eligibility?
 export type Taxes = { valueUsd?: number; dutyIls: number; vatIls: number; feeIls: number; totalIls: number; exempt: boolean };
 export type Route = { kind: 'direct' | 'forwarder'; name: string; days: string; note?: string; chargeableKg?: number;
   shippingIls: number; taxes: Taxes; totalIls: number; shippingUnknown?: boolean };
-export type DealStatus = 'sample' | 'pending' | 'verified';
+export type DealStatus = 'sample' | 'pending' | 'verified' | 'account';
 export type Discount = { kind: 'club' | 'coupon'; id: string; status: DealStatus; source: string | null; verifiedAt: string | null;
   name?: string; clubId?: string; code?: string; label: string; amountIls: number; verified?: boolean; expires?: string; note?: string };
 export type Offer = {
@@ -36,11 +36,13 @@ export type History = { points: PricePoint[]; lowest: PricePoint | null; highest
 export type OffersResponse = { product: ProductSummary; offers: Offer[]; errors: ProviderError[]; mode: DataMode; deals: boolean; history?: History;
   fx: { rates: Record<string, number>; source: string } };
 export type SearchResponse = { results: ProductSummary[]; mode: DataMode; errors: ProviderError[] };
-export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode; deals: boolean };
+export type StoreInfo = { id: string; name: string; aliases: string[]; type: 'local' | 'intl' };
+export type Meta = { clubs: Club[]; popular: ProductSummary[]; mode: DataMode; deals: boolean; stores: StoreInfo[] };
 
 export type ClubSource = { label: string; url: string; access?: 'login' | 'public' | 'card' };
 export type ClubInfo = { id: string; name: string; description: string; eligibility: string | null; payment: string | null;
-  sources: ClubSource[]; primary: boolean; benefitsCount: number; stores: string[] };
+  sources: ClubSource[]; primary: boolean; benefitsCount: number; stores: string[];
+  connect: { loginUrl: string | null; benefitsUrl: string | null } | null };
 export type ClubBenefit = { id: string; storeId: string; storeName: string; label: string; minSpend: number | null;
   stackableWithCoupon: boolean; expires: string | null; status: DealStatus; source: string | null; verifiedAt: string | null; note: string | null };
 export type BenefitSuggestion = { store: string; discount: string; link?: string; note?: string };
@@ -85,6 +87,6 @@ export const api = {
     const res = await fetch(`${API_URL}/api/deals/${encodeURIComponent(dealId)}/report`, { method: 'POST' });
     if (!res.ok) throw new Error(`שגיאת שרת (${res.status})`);
   },
-  offers: (id: string, clubs: string[]) =>
-    get<OffersResponse>(`/api/products/${encodeURIComponent(id)}/offers?clubs=${clubs.join(',')}`),
+  offers: (id: string, clubs: string[], personal = '') =>
+    get<OffersResponse>(`/api/products/${encodeURIComponent(id)}/offers?clubs=${clubs.join(',')}${personal ? `&personal=${encodeURIComponent(personal)}` : ''}`),
 };

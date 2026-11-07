@@ -153,3 +153,33 @@ test('חיבור למועדונים: רשימה, סנכרון הטבות מאו�
   assert.equal((await putDeals(d2)).status, 200);
   assert.equal((await getDeals()).suggestions.length, 4);
 });
+
+test('הטבות מהחשבון במועדון (personal) חלות על המחיר, עם מינימום קנייה, גם כשההנחות הכלליות כבויות', async () => {
+  const id = 'sa:12827020246278533726'; // KSP ₪1,163 + ₪28 משלוח
+  const before = await fetch(`${base}/api/products/${id}/offers`).then((r) => r.json());
+  const kspBase = before.offers.find((o) => o.domain === 'ksp.co.il');
+  const r = await fetch(`${base}/api/products/${id}/offers?personal=behatzdaa.ksp.8,pais-plus.bug.5.5000,fake.ksp.9,behatzdaa.nowhere.5,behatzdaa.ksp.90`).then((x) => x.json());
+  const ksp = r.offers.find((o) => o.domain === 'ksp.co.il');
+  const applied = ksp.discounts.applied[0];
+  assert.equal(applied.status, 'account');
+  assert.equal(applied.name, 'בהצדעה (מהחשבון שלך)');
+  assert.equal(applied.amountIls, Math.round(1163 * 0.08 * 100) / 100);
+  assert.ok(ksp.totalIls < kspBase.totalIls);
+  // באג: מינימום 5000 – לא חל על ₪1,199
+  assert.equal(r.offers.find((o) => o.domain === 'bug.co.il').discounts.totalIls, 0);
+});
+
+test('parsePersonal מסנן מועדון/חנות לא קיימים ואחוזים לא סבירים', async () => {
+  const { parsePersonal } = await import('../server/app.js');
+  assert.deepEqual(parsePersonal('behatzdaa.ksp.8,fake.ksp.9,behatzdaa.nowhere.5,behatzdaa.ksp.90,pais-plus.bug.5.500'), [
+    { clubId: 'behatzdaa', clubName: 'בהצדעה', storeId: 'ksp', percent: 8, minSpend: null },
+    { clubId: 'pais-plus', clubName: 'פיס פלוס – מנויי מפעל הפיס', storeId: 'bug', percent: 5, minSpend: 500 },
+  ]);
+});
+
+test('מטא: חנויות עם שמות חלופיים, ומועדונים עם כתובת חיבור', async () => {
+  const meta = await fetch(base + '/api/meta').then((r) => r.json());
+  assert.ok(meta.stores.find((s) => s.id === 'ivory').aliases.includes('אייבורי'));
+  const clubs = await fetch(base + '/api/clubs').then((r) => r.json());
+  assert.equal(clubs.clubs.find((c) => c.id === 'behatzdaa').connect.loginUrl, 'https://www.behatsdaa.org.il/');
+});

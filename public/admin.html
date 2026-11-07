@@ -142,10 +142,19 @@ function renderSources() {
       <div class="muted">${esc(c.eligibility ?? '')}</div>
       ${c.payment ? `<div class="muted">💳 ${esc(c.payment)}</div>` : ''}
       ${(c.sources ?? []).map((s) => `<div>🔗 <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)}</a> <span class="pill">${access[s.access] ?? ''}</span></div>`).join('')}
+      <div class="muted">חיבור חשבון באפליקציה (אתר המועדון נפתח בתוך האפליקציה):</div>
+      <input data-connect="loginUrl" data-club="${esc(c.id)}" placeholder="כתובת עמוד הכניסה https://…" value="${esc(c.connect?.loginUrl ?? '')}" />
+      <input data-connect="benefitsUrl" data-club="${esc(c.id)}" placeholder="כתובת עמוד ההטבות (לא חובה)" value="${esc(c.connect?.benefitsUrl ?? '')}" />
       <div><button data-add-club="${esc(c.id)}">+ הנחה ל${esc(c.name)}</button></div>
     </div>`;
   }).join('');
 }
+$('#sources').addEventListener('change', (e) => {
+  const k = e.target.dataset?.connect; if (!k) return;
+  const club = data.clubs.find((c) => c.id === e.target.dataset.club);
+  club.connect = { ...(club.connect ?? {}), [k]: e.target.value.trim() || null };
+  msg('הכתובת עודכנה – לחצו "שמירה" כדי שהאפליקציה תשתמש בה.', true);
+});
 $('#sources').addEventListener('click', (e) => {
   const id = e.target.dataset?.addClub; if (!id) return;
   const club = data.clubs.find((c) => c.id === id);

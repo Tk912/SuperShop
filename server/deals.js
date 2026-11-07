@@ -55,6 +55,10 @@ function validate(next) {
   next.clubs.forEach((c) => {
     if (!c.id || !c.name) errors.push('מועדון בלי id או שם');
     (c.sources ?? []).forEach((s) => { if (!/^https:\/\//.test(s.url ?? '')) errors.push(`${c.name}: קישור מקור חייב להתחיל ב-https://`); });
+    for (const k of ['loginUrl', 'benefitsUrl']) {
+      const u = c.connect?.[k];
+      if (u && !/^https:\/\//.test(u)) errors.push(`${c.name}: כתובת ${k} חייבת להתחיל ב-https://`);
+    }
     (c.rules ?? []).forEach((r, i) => checkCommon(r, `${c.name} #${i + 1}`));
   });
   next.coupons.forEach((c, i) => {

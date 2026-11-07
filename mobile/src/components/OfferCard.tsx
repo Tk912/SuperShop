@@ -89,6 +89,7 @@ export function OfferCard({ o, isBest, deals = true }: { o: Offer; isBest: boole
             {d.status === 'sample' && <Badge label="לדוגמה" fg={t.warn} bg={t.warnSoft} />}
             {d.status === 'pending' && <Badge label="לא מאומת" fg={t.warn} bg={t.warnSoft} />}
             {d.status === 'verified' && <DealTrust d={d} t={t} />}
+            {d.status === 'account' && <Badge label="מהחשבון שלך" fg={t.good} bg={t.goodSoft} />}
           </View>
         ))}
         <Text style={{ color: t.muted, fontSize: 13 }}>

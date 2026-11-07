@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ClubAccountSection } from '../components/ClubAccountSection';
 import { ErrorState } from '../components/ErrorState';
 import { api, type ClubBenefit, type ClubInfo } from '../lib/api';
+import { useClubAccounts } from '../lib/clubAccounts';
 import { useClubs } from '../lib/clubs';
 import { RLM, useTheme, type Theme } from '../lib/theme';
 
@@ -20,6 +22,7 @@ const dmy = (d: string | null) => (d ? d.split('-').reverse().slice(0, 2).join('
 export default function Clubs() {
   const t = useTheme();
   const { myClubs, toggle } = useClubs();
+  const { accounts } = useClubAccounts();
   const [clubs, setClubs] = useState<ClubInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [synced, setSynced] = useState<Record<string, Synced>>({});
@@ -68,17 +71,17 @@ export default function Clubs() {
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
       <Text style={{ color: t.muted }}>
-        חברים במועדון? חברו אותו, וההטבות המאומתות שלו יסונכרנו ויחושבו אוטומטית במחיר עד הבית.
+        התחברו פעם אחת לחשבון שלכם במועדון, והאפליקציה תציג את כל ההטבות והמבצעים שלכם. הטבות בחנויות שבהשוואה ייכנסו אוטומטית למחיר עד הבית.
       </Text>
       {sorted.map((c) => (
-        <ClubCard key={c.id} club={c} t={t} connected={myClubs.includes(c.id)} onToggle={() => {
+        <ClubCard key={c.id} club={c} t={t} connected={myClubs.includes(c.id) || !!accounts[c.id]} onToggle={() => {
           const connecting = !myClubs.includes(c.id);
           toggle(c.id);
           if (connecting) sync(c.id);
         }} synced={synced[c.id]} syncing={!!syncing[c.id]} onSync={() => sync(c.id)} />
       ))}
       <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }}>
-        החברות במועדון נשמרת רק במכשיר שלכם. לא נדרשים ולא נשמרים מספר תעודת זהות או סיסמה.
+        ההתחברות נעשית באתר המועדון עצמו, והסיסמה לא נשמרת באפליקציה. ההטבות שיובאו נשמרות רק בטלפון שלכם.
       </Text>
     </ScrollView>
   );
@@ -103,6 +106,8 @@ function ClubCard({ club: c, t, connected, onToggle, synced, syncing, onSync }: 
       </View>
       {c.eligibility ? <Text style={{ color: t.muted, fontSize: 12 }}>זכאות: {c.eligibility}</Text> : null}
       {c.payment ? <Text style={{ color: t.muted, fontSize: 12 }}>💳 {c.payment}</Text> : null}
+
+      <ClubAccountSection club={c} />
 
       {connected && (
         <View style={[styles.sync, { backgroundColor: t.bg }]}>

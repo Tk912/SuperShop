@@ -102,11 +102,19 @@ export function importTaxes(itemIls, shippingIls, category, rates, { prepaidHand
  * @returns אובייקט עם כל מסלולי המשלוח, ההנחות והעלות הסופית הזולה ביותר.
  */
 // dealFilter קובע אילו הנחות מותר להפעיל (למשל: רק מאומתות, כשהמחירים אמיתיים). deals=false מכבה את כולן.
-export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date(), deals = true, dealFilter = ALL }) {
+// personal = הטבות מהחשבון של המשתמש במועדון (נקראו באפליקציה מאתר המועדון): [{ clubId, clubName, storeId, percent, minSpend }].
+// הן אישיות ואמיתיות למשתמש, ולכן חלות גם כשנתוני ההנחות הכלליים כבויים.
+export function evaluateOffer({ offer, product, store, rates, userClubIds = [], now = new Date(), deals = true, dealFilter = ALL, personal = [] }) {
   const currency = offer.currency ?? store.currency;
   const priceIls = toIls(offer.price, currency, rates);
 
   const clubOpts = deals ? applicableClubRules(store, product, priceIls, userClubIds, dealFilter) : [];
+  for (const r of personal) {
+    if (r.storeId !== store.id || (r.minSpend && priceIls < r.minSpend)) continue;
+    clubOpts.push({ kind: 'club', id: `account:${r.clubId}:${r.storeId}`, status: 'account', source: null, verifiedAt: null,
+      clubId: r.clubId, name: `${r.clubName} (מהחשבון שלך)`, label: `${r.percent}%`, stackable: false,
+      amountIls: round2(Math.min((priceIls * r.percent) / 100, priceIls)) });
+  }
   const couponOpts = deals ? applicableCoupons(store, product, offer.price, rates, now, dealFilter) : [];
   const discount = bestDiscount(clubOpts, couponOpts, priceIls);
   const itemIls = priceIls - discount.totalIls;

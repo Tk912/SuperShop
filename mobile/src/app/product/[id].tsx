@@ -6,6 +6,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { OfferCard } from '../../components/OfferCard';
 import { PriceWatch } from '../../components/PriceWatch';
 import { api, imageUrl, type OffersResponse } from '../../lib/api';
+import { useClubAccounts } from '../../lib/clubAccounts';
 import { useClubs } from '../../lib/clubs';
 import { catName, ils, RLM, useTheme } from '../../lib/theme';
 
@@ -16,6 +17,9 @@ export default function Product() {
   const t = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { myClubs, ready } = useClubs();
+  const { personalParam, accounts } = useClubAccounts();
+  // חשבון מחובר = גם חבר במועדון (כדי שגם ההטבות המאומתות הכלליות שלו יחולו)
+  const memberOf = useMemo(() => [...new Set([...myClubs, ...Object.keys(accounts)])], [myClubs, accounts]);
   const [data, setData] = useState<OffersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,8 +27,8 @@ export default function Product() {
 
   const [attempt, setAttempt] = useState(0);
   const fetchOffers = useCallback(
-    () => api.offers(id, myClubs).then((d) => { setData(d); setError(null); }).catch((e) => setError(String(e.message ?? e))),
-    [id, myClubs],
+    () => api.offers(id, memberOf, personalParam).then((d) => { setData(d); setError(null); }).catch((e) => setError(String(e.message ?? e))),
+    [id, memberOf, personalParam],
   );
 
   // חישוב מחדש כשהמועדונים משתנים
@@ -69,10 +73,10 @@ export default function Product() {
       <Link href="/clubs" asChild>
         <Pressable style={StyleSheet.flatten([styles.clubsBtn, { borderColor: t.line, backgroundColor: t.card }])}>
           <Text style={{ color: t.ink, flex: 1 }}>
-            🎖️ {myClubs.length ? `${myClubs.length} מועדונים מחוברים` : 'חברים במועדון הטבות? חברו אותו'}
+            🎖️ {memberOf.length ? `${memberOf.length} מועדונים מחוברים` : 'חברים במועדון הטבות? חברו אותו'}
             {data.deals ? '' : ' · הטבות מאומתות יחושבו כאן במחיר'}
           </Text>
-          <Text style={{ color: t.brand }}>{myClubs.length ? 'ניהול' : 'חיבור'}</Text>
+          <Text style={{ color: t.brand }}>{memberOf.length ? 'ניהול' : 'חיבור'}</Text>
         </Pressable>
       </Link>
 

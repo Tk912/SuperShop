@@ -19,7 +19,7 @@ const storeFor = (offer) => getStore(offer.storeId) ?? (offer.storeHint ? resolv
  * @returns {{ offers, errors, rates, fxSource, best }} – offers ממוינות (במלאי קודם, ואז לפי מחיר);
  *   best = ההצעה הזולה שבמלאי לפי מחיר בסיס, בלי הנחות אישיות (זהה לכל המשתמשים – להיסטוריה ולהתראות).
  */
-export async function compareProduct(product, userClubIds = []) {
+export async function compareProduct(product, userClubIds = [], personal = []) {
   const { rates, source: fxSource } = await refreshRates();
   const { offers, errors } = await collectOffers(product);
   const deals = dealsEnabled();
@@ -29,7 +29,7 @@ export async function compareProduct(product, userClubIds = []) {
     .map((offer) => {
       const store = storeFor(offer);
       if (!store) return null;
-      const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals, dealFilter });
+      const ev = evaluateOffer({ offer, product, store, rates, userClubIds, deals, dealFilter, personal });
       ev.missedClubs = deals ? missedClubSavings({ offer, product, store, rates, userClubIds, dealFilter }) : [];
       ev.title = offer.title;
       ev.inStock = offer.inStock !== false;
