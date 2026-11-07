@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { WebView as RNWebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
 import { api, type ClubInfo } from '../../lib/api';
-import { enrich, EXTRACT_BENEFITS_JS, type ExtractResult } from '../../lib/benefitExtractor';
+import { enrich, EXTRACT_BENEFITS_JS, PING_JS, type ExtractDiag, type ExtractMessage } from '../../lib/benefitExtractor';
 import { useClubAccounts } from '../../lib/clubAccounts';
 import { useTheme } from '../../lib/theme';
 import { useMeta } from '../../lib/useMeta';
@@ -35,21 +35,69 @@ export default function ClubConnect() {
 
   const startUrl = syncPages[0] ?? club?.connect?.benefitsUrl ?? club?.connect?.loginUrl ?? null;
 
-  const extract = () => { setBusy(true); web.current?.injectJavaScript(EXTRACT_BENEFITS_JS); };
+  // הייבוא בשלבים, עם משוב על המסך בכל שלב:
+  //  1. ping – בודקים שיש תקשורת עם העמוד (אם לא: קוד P1)
+  //  2. קריאת ההטבות, עם הודעות התקדמות (גלילה, זיהוי)
+  //  3. מגבלת זמן של 30 שניות (קוד T1), ופרטי אבחון כשלא נמצא כלום
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pinged = useRef(false);
+  const stage = useRef('');
+  const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  useEffect(() => clearTimers, []);
+
+  const STAGES: Record<string, string> = {
+    started: '⏳ מתחיל לקרוא את העמוד…',
+    scrolling: '⏳ גולל את העמוד כדי לטעון את כל ההטבות…',
+    scanning: '⏳ מזהה את ההטבות בעמוד…',
+  };
+  const diagText = (d?: ExtractDiag, ms?: number) => (d
+    ? `פרטים לאבחון: שלב ${d.stage} · רכיבים ${d.elements} · מסגרות ${d.frames} (מאותו אתר ${d.sameOriginFrames}) · טקסטים עם הנחה ${d.textHits} · כרטיסים ${d.cards}${d.hiddenPassword ? ` · שדות סיסמה מוסתרים ${d.hiddenPassword}` : ''}${ms != null ? ` · ${(ms / 1000).toFixed(1)} שנ׳` : ''}`
+    : '');
+
+  const fail = (text: string) => { clearTimers(); setBusy(false); syncing.current = false; setStatus({ kind: 'warn', text }); };
+
+  const extract = () => {
+    clearTimers();
+    setBusy(true);
+    pinged.current = false;
+    stage.current = 'ping';
+    setStatus({ kind: 'info', text: '⏳ מתחבר לעמוד…' });
+    web.current?.injectJavaScript(PING_JS);
+    timers.current.push(setTimeout(() => {
+      if (!pinged.current) fail('האפליקציה לא מצליחה לתקשר עם העמוד (קוד P1). נסו לרענן את העמוד או לצאת ולהיכנס שוב למסך הזה.');
+    }, 5000));
+    timers.current.push(setTimeout(() => {
+      fail(`הקריאה לקחה יותר מדי זמן (קוד T1, שלב: ${stage.current}). נסו שוב, או עברו לעמוד עם פחות הטבות (למשל קטגוריה אחת).`);
+    }, 30000));
+  };
 
   const onMessage = (e: WebViewMessageEvent) => {
-    let r: ExtractResult;
+    let r: ExtractMessage;
     try { r = JSON.parse(e.nativeEvent.data); } catch { return; }
+    if (r.type === 'ping') {
+      if (pinged.current) return;
+      pinged.current = true;
+      stage.current = 'started';
+      setStatus({ kind: 'info', text: STAGES.started });
+      web.current?.injectJavaScript(EXTRACT_BENEFITS_JS);
+      return;
+    }
+    if (r.type === 'progress') {
+      stage.current = r.stage;
+      if (STAGES[r.stage]) setStatus({ kind: 'info', text: STAGES[r.stage] });
+      return;
+    }
     if (r.type !== 'benefits') return;
+    clearTimers();
     setBusy(false);
     if (r.needsLogin) {
       setStatus({ kind: 'warn', text: syncing.current ? 'ההתחברות לאתר המועדון פגה. התחברו שוב, ואז “ייבוא”.' : 'נראה שעדיין לא התחברתם. התחברו באתר, עברו לעמוד ההטבות ולחצו “ייבוא”.' });
       syncing.current = false;
       return;
     }
-    if (r.error) { setStatus({ kind: 'warn', text: 'לא הצלחנו לקרוא את העמוד. נסו לעבור לעמוד ההטבות עצמו.' }); return; }
+    if (r.error) { fail(`לא הצלחנו לקרוא את העמוד (קוד E1: ${r.error}). ${diagText(r.diag, r.ms)}`); return; }
     const items = r.items.map((b) => enrich(b, r.url, meta?.stores ?? []));
-    importPage(id, r.url, items);
+    if (items.length) importPage(id, r.url, items);
     found.current += items.length;
     const matched = items.filter((i) => i.storeId && i.percent).length;
     if (syncing.current && queue.current.length) {
@@ -59,8 +107,8 @@ export default function ClubConnect() {
     }
     syncing.current = false;
     setStatus(items.length
-      ? { kind: 'ok', text: `יובאו ${items.length} הטבות מהעמוד${matched ? ` (${matched} מהן בחנויות שבהשוואה ייכנסו למחיר)` : ''}. אפשר לעבור לעמוד נוסף ולייבא גם אותו.` }
-      : { kind: 'warn', text: 'לא נמצאו הטבות בעמוד הזה. עברו לעמוד שמציג את רשימת ההטבות ונסו שוב.' });
+      ? { kind: 'ok', text: `✓ יובאו ${items.length} הטבות מהעמוד${matched ? ` (${matched} מהן בחנויות שבהשוואה ייכנסו למחיר)` : ''}. אפשר לעבור לעמוד נוסף ולייבא גם אותו, או ללחוץ “סיום”.` }
+      : { kind: 'warn', text: `לא נמצאו הטבות בעמוד הזה. ודאו שאתם בעמוד שמציג את רשימת ההטבות, ונסו שוב. אם הבעיה חוזרת, צלמו את ההודעה הזו ושלחו לנו.\n${diagText(r.diag, r.ms)}` });
   };
 
   if (Platform.OS === 'web') {
@@ -102,7 +150,9 @@ export default function ClubConnect() {
       {status && <View style={[styles.status, { backgroundColor: tone.bg }]}><Text style={{ color: tone.fg, fontSize: 13 }}>{status.text}</Text></View>}
       <View style={[styles.bar, { backgroundColor: t.card, borderColor: t.line }]}>
         <Pressable onPress={extract} disabled={busy} style={[styles.primary, { backgroundColor: t.brand, opacity: busy ? 0.7 : 1 }]}>
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>ייבוא ההטבות מהעמוד הזה</Text>}
+          {busy
+            ? <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><ActivityIndicator color="#fff" /><Text style={{ color: '#fff', fontWeight: '700' }}>קורא הטבות…</Text></View>
+            : <Text style={{ color: '#fff', fontWeight: '700' }}>ייבוא ההטבות מהעמוד הזה</Text>}
         </Pressable>
         <Pressable onPress={() => router.back()} style={[styles.secondary, { borderColor: t.line }]}>
           <Text style={{ color: t.ink }}>סיום</Text>
