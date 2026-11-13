@@ -77,6 +77,7 @@ jobs:
           URL: ${{ steps.deploy.outputs.url }}
         run: |
           curl -fsS "$URL/api/meta" | jq -e '.mode == "live" and (.clubs | length) > 0' > /dev/null
+          curl -fsS "$URL/api/hub" | jq -e '.total >= 0 and (.items | type) == "array"' > /dev/null
           # חיפוש אמיתי (SearchApi) – התוצאה נשמרת במטמון ב-Firestore, כך שבפריסות הבאות זה לא עולה בקשה נוספת
           curl -fsS "$URL/api/search?q=airpods%20pro%203" -o search.json
           jq -e '(.errors | length) == 0 and ([.results[] | select(.live)] | length) > 0' search.json > /dev/null

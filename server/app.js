@@ -14,6 +14,7 @@ import { getRates } from './pricing/fx.js';
 import { taxConfig } from './pricing/taxConfig.js';
 import { getHistory } from './priceHistory.js';
 import { flush } from './storage.js';
+import { hubFeed, shareDeals, hideShared, sharedItems } from './hub.js';
 import { listWatches, upsertWatch, removeWatch, checkWatches, isPushToken } from './alerts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -165,6 +166,25 @@ export function createApp() {
     if (reported.size > 50000) reported.clear();
     return { ok: true, reports: n };
   }));
+
+  // ---- מרכז ההטבות: כל ההטבות על מוצרים מכל המועדונים ----
+  app.get('/api/hub', wrap(async (req) => hubFeed({
+    clubs: String(req.query.clubs ?? '').split(',').filter(Boolean), category: req.query.category || undefined,
+    region: ['il', 'intl'].includes(req.query.region) ? req.query.region : undefined, q: req.query.q,
+    limit: req.query.limit, offset: req.query.offset,
+  }, currentFilter())));
+  // שיתוף הטבות מחשבון מועדון (חנות + הנחה בלבד). עד 10 שיתופים ביום לכתובת
+  const shared = new Map();
+  app.post('/api/hub/share', wrap(async (req) => {
+    const key = `${req.ip}|${new Date().toISOString().slice(0, 10)}`;
+    if ((shared.get(key) ?? 0) >= 10) throw Object.assign(new Error('too many shares today'), { status: 429 });
+    const r = shareDeals(String(req.body?.clubId ?? ''), req.body?.items, req.ip);
+    shared.set(key, (shared.get(key) ?? 0) + 1);
+    if (shared.size > 50000) shared.clear();
+    return r;
+  }));
+  app.get('/api/admin/hub', admin(() => ({ items: sharedItems() })));
+  app.put('/api/admin/hub/:id', admin((req) => hideShared(req.params.id, req.body?.hidden !== false)));
 
   app.get('/api/meta', (_req, res) => {
     res.json({

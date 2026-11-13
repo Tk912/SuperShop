@@ -21,7 +21,7 @@ export default function ClubConnect() {
   const insets = useSafeAreaInsets();
   const { id, sync } = useLocalSearchParams<{ id: string; sync?: string }>();
   const { meta } = useMeta();
-  const { accounts, importPage } = useClubAccounts();
+  const { accounts, importPage, shareEnabled } = useClubAccounts();
   const [club, setClub] = useState<ClubInfo | null>(null);
   const [status, setStatus] = useState<{ kind: 'info' | 'ok' | 'warn'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,7 +110,7 @@ export default function ClubConnect() {
     }
     syncing.current = false;
     setStatus(items.length
-      ? { kind: 'ok', text: `✓ יובאו ${items.length} הטבות מהעמוד${matched ? ` (${matched} מהן בחנויות שבהשוואה ייכנסו למחיר)` : ''}. אפשר לעבור לעמוד נוסף ולייבא גם אותו, או ללחוץ “סיום”.` }
+      ? { kind: 'ok', text: `✓ יובאו ${items.length} הטבות מהעמוד${shareEnabled ? ' – ההטבות על מוצרים יופיעו במרכז ההטבות' : ''}${matched ? ` (${matched} מהן בחנויות שבהשוואה ייכנסו גם למחיר)` : ''}. אפשר לעבור לעמוד נוסף ולייבא גם אותו, או ללחוץ “סיום”.` }
       : { kind: 'warn', text: `לא נמצאו הטבות בעמוד הזה. ודאו שאתם בעמוד שמציג את רשימת ההטבות, ונסו שוב. אם הבעיה חוזרת, צלמו את ההודעה הזו ושלחו לנו.\n${diagText(r.diag, r.ms)}` });
   };
 
@@ -134,7 +134,7 @@ export default function ClubConnect() {
       <View style={[styles.banner, { backgroundColor: t.card, borderColor: t.line }]}>
         <Text style={{ color: t.ink, fontSize: 13 }}>
           🔒 אתם באתר של {club.name}. התחברו כרגיל – הסיסמה נשארת באתר המועדון, והאפליקציה לא שומרת אותה.
-          {'\n'}אחרי ההתחברות עברו לעמוד ההטבות ולחצו “ייבוא ההטבות מהעמוד הזה”.
+          {'\n'}אחרי ההתחברות עברו לעמוד ההטבות ולחצו “ייבוא ההטבות מהעמוד הזה”. הטבות על מוצרים יופיעו במרכז ההטבות.
         </Text>
       </View>
       <WebView

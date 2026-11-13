@@ -1,25 +1,23 @@
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ClubChips } from '../components/ClubChips';
-import { ErrorState } from '../components/ErrorState';
-import { ProductGrid } from '../components/ProductGrid';
-import { SearchBox } from '../components/SearchBox';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../lib/theme';
-import { useFavorites } from '../lib/favorites';
-import { useMeta } from '../lib/useMeta';
+import { ClubChips } from '../../components/ClubChips';
+import { ErrorState } from '../../components/ErrorState';
+import { ProductGrid } from '../../components/ProductGrid';
+import { SearchBox } from '../../components/SearchBox';
+import { useTheme } from '../../lib/theme';
+import { useFavorites } from '../../lib/favorites';
+import { useMeta } from '../../lib/useMeta';
 
 export default function Home() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { meta, error, retry } = useMeta();
   const { favorites } = useFavorites();
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.page, { paddingBottom: 48 + insets.bottom }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.page}>
       <View style={styles.hero}>
-        <Image source={require('../../assets/icon.png')} style={styles.logo} accessibilityLabel="הלוגו של SuperShop" />
+        <Image source={require('../../../assets/icon.png')} style={styles.logo} accessibilityLabel="הלוגו של SuperShop" />
         <Text style={[styles.h1, { color: t.ink }]}>המחיר האמיתי, עד הדלת</Text>
         <Text style={[styles.sub, { color: t.muted }]}>
           משווים חנויות בישראל ובחו״ל כולל מועדונים, קופונים, משלוח, מע״מ ומכס

@@ -1,13 +1,12 @@
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { ClubAccountSection } from '../components/ClubAccountSection';
-import { ErrorState } from '../components/ErrorState';
-import { api, type ClubBenefit, type ClubInfo } from '../lib/api';
-import { useClubAccounts } from '../lib/clubAccounts';
-import { useClubs } from '../lib/clubs';
-import { RLM, useTheme, type Theme } from '../lib/theme';
+import { ClubAccountSection } from '../../components/ClubAccountSection';
+import { ErrorState } from '../../components/ErrorState';
+import { api, type ClubBenefit, type ClubInfo } from '../../lib/api';
+import { useClubAccounts } from '../../lib/clubAccounts';
+import { useClubs } from '../../lib/clubs';
+import { RLM, useTheme, type Theme } from '../../lib/theme';
 
 // חיבור למועדונים: מסמנים חברות (נשמר רק במכשיר), והאפליקציה מסנכרנת מהשרת את ההטבות המאומתות של המועדון.
 // אין התחברות לחשבון במועדון: למועדונים אין ממשק לאפליקציות חיצוניות, ואנחנו לא שומרים ת"ז או סיסמאות.
@@ -22,9 +21,8 @@ const dmy = (d: string | null) => (d ? d.split('-').reverse().slice(0, 2).join('
 
 export default function Clubs() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { myClubs, toggle } = useClubs();
-  const { accounts } = useClubAccounts();
+  const { accounts, shareEnabled, setShareEnabled } = useClubAccounts();
   const [clubs, setClubs] = useState<ClubInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [synced, setSynced] = useState<Record<string, Synced>>({});
@@ -71,9 +69,9 @@ export default function Clubs() {
 
   const sorted = [...clubs].sort((a, b) => Number(b.primary) - Number(a.primary));
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 + insets.bottom }} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
       <Text style={{ color: t.muted }}>
-        התחברו פעם אחת לחשבון שלכם במועדון, והאפליקציה תציג את כל ההטבות והמבצעים שלכם. הטבות בחנויות שבהשוואה ייכנסו אוטומטית למחיר עד הבית.
+        התחברו פעם אחת לחשבון שלכם במועדון, וכל ההטבות והמבצעים שלכם יופיעו במרכז ההטבות. הטבות בחנויות שבהשוואה ייכנסו גם למחיר עד הבית.
       </Text>
       {sorted.map((c) => (
         <ClubCard key={c.id} club={c} t={t} connected={myClubs.includes(c.id) || !!accounts[c.id]} onToggle={() => {
@@ -82,8 +80,18 @@ export default function Clubs() {
           if (connecting) sync(c.id);
         }} synced={synced[c.id]} syncing={!!syncing[c.id]} onSync={() => sync(c.id)} />
       ))}
+      <View style={[styles.card, { backgroundColor: t.card, borderColor: t.line }]}>
+        <View style={styles.row}>
+          <Text style={{ color: t.ink, fontWeight: '700', flex: 1 }}>שיתוף ההטבות במרכז ההטבות</Text>
+          <Switch value={shareEnabled} onValueChange={setShareEnabled} trackColor={{ true: t.brand }} accessibilityLabel="שיתוף ההטבות במרכז ההטבות" />
+        </View>
+        <Text style={{ color: t.muted, fontSize: 12 }}>
+          ההטבות על מוצרים שיובאו מהחשבון שלכם (שם החנות וההנחה בלבד) מופיעות במרכז ההטבות לכל המשתמשים. לא נשלח שום פרט אישי:
+          לא שם, לא ת״ז ולא פרטי חשבון. הטבות על שירותים ואטרקציות לא משותפות.
+        </Text>
+      </View>
       <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }}>
-        ההתחברות נעשית באתר המועדון עצמו, והסיסמה לא נשמרת באפליקציה. ההטבות שיובאו נשמרות רק בטלפון שלכם.
+        ההתחברות נעשית באתר המועדון עצמו, והסיסמה לא נשמרת באפליקציה.
       </Text>
     </ScrollView>
   );

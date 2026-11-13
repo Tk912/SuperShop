@@ -36,10 +36,9 @@ export default function RootLayout() {
         headerStyle: { backgroundColor: t.card }, headerTintColor: t.ink, headerTitleStyle: { fontWeight: '700' },
         contentStyle: { backgroundColor: t.bg }, headerBackButtonDisplayMode: 'minimal',
       }}>
-        <Stack.Screen name="index" options={{ title: 'SuperShop' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SuperShop' }} />
         <Stack.Screen name="search" options={{ title: 'תוצאות חיפוש' }} />
         <Stack.Screen name="product/[id]" options={{ title: 'השוואת מחירים' }} />
-        <Stack.Screen name="clubs" options={{ title: 'חיבור למועדונים' }} />
         <Stack.Screen name="club-connect/[id]" options={{ title: 'חיבור לחשבון המועדון' }} />
         <Stack.Screen name="favorites" options={{ title: 'במעקב מחיר' }} />
         <Stack.Screen name="scan" options={{ title: 'סריקת ברקוד', presentation: 'fullScreenModal' }} />

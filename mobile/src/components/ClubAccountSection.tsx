@@ -13,7 +13,7 @@ const ago = (iso: string) => {
 // החשבון שלי במועדון: התחברות (באתר המועדון בתוך האפליקציה), ההטבות שיובאו, חיפוש, סנכרון וניתוק.
 export function ClubAccountSection({ club }: { club: ClubInfo }) {
   const t = useTheme();
-  const { accounts, disconnect } = useClubAccounts();
+  const { accounts, disconnect, lastShare } = useClubAccounts();
   const acc = accounts[club.id];
   const [q, setQ] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -24,7 +24,7 @@ export function ClubAccountSection({ club }: { club: ClubInfo }) {
       <View style={[styles.box, { backgroundColor: t.bg }]}>
         <Text style={{ color: t.ink, fontWeight: '700' }}>🔑 כל ההטבות והמבצעים מהחשבון שלכם</Text>
         <Text style={{ color: t.muted, fontSize: 13 }}>
-          מתחברים פעם אחת לאתר המועדון בתוך האפליקציה, והיא תציג את ההטבות שלכם (למשל 20% בפוקס). הטבות בחנויות שבהשוואה ייכנסו למחיר.
+          מתחברים פעם אחת לאתר המועדון בתוך האפליקציה, וכל ההטבות שלכם (למשל 20% בפוקס) יופיעו במרכז ההטבות.
         </Text>
         {canConnect ? (
           <Pressable onPress={() => router.push({ pathname: '/club-connect/[id]', params: { id: club.id } })} style={[styles.primary, { backgroundColor: t.brand }]}>
@@ -45,6 +45,7 @@ export function ClubAccountSection({ club }: { club: ClubInfo }) {
         <Text style={{ color: t.ink, fontWeight: '700', flex: 1 }}>🔑 ההטבות שלי ב{club.name} ({acc.items.length})</Text>
         <Text style={{ color: t.muted, fontSize: 12 }}>סונכרן {ago(acc.syncedAt)}</Text>
       </View>
+      {lastShare[club.id] > 0 && <Text style={{ color: t.good, fontSize: 13 }}>🏷️ {lastShare[club.id]} הטבות על מוצרים מופיעות במרכז ההטבות</Text>}
       {matched > 0 && <Text style={{ color: t.good, fontSize: 13 }}>✓ {matched} הטבות בחנויות שבהשוואה נכנסות אוטומטית למחיר</Text>}
       {acc.items.length > 5 && (
         <TextInput value={q} onChangeText={setQ} placeholder="חיפוש הטבה (למשל פוקס, מסעדות…)" placeholderTextColor={t.muted}
