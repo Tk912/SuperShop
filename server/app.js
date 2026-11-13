@@ -173,11 +173,11 @@ export function createApp() {
     region: ['il', 'intl'].includes(req.query.region) ? req.query.region : undefined, q: req.query.q,
     limit: req.query.limit, offset: req.query.offset,
   }, currentFilter())));
-  // שיתוף הטבות מחשבון מועדון (חנות + הנחה בלבד). עד 10 שיתופים ביום לכתובת
+  // שיתוף הטבות מחשבון מועדון (חנות + הנחה בלבד). עד 60 שיתופים ביום לכתובת (כל ייבוא עמוד = שיתוף)
   const shared = new Map();
   app.post('/api/hub/share', wrap(async (req) => {
     const key = `${req.ip}|${new Date().toISOString().slice(0, 10)}`;
-    if ((shared.get(key) ?? 0) >= 10) throw Object.assign(new Error('too many shares today'), { status: 429 });
+    if ((shared.get(key) ?? 0) >= 60) throw Object.assign(new Error('too many shares today'), { status: 429 });
     const r = shareDeals(String(req.body?.clubId ?? ''), req.body?.items, req.ip);
     shared.set(key, (shared.get(key) ?? 0) + 1);
     if (shared.size > 50000) shared.clear();

@@ -55,7 +55,7 @@ export type HubFacet = { id: string; name: string; count: number };
 export type HubResponse = { total: number; items: HubItem[]; categories: HubFacet[]; clubs: HubFacet[]; regions: { il: number; intl: number } };
 export type HubQuery = { clubs?: string[]; category?: string; region?: 'il' | 'intl'; q?: string; offset?: number };
 export type ShareItem = { title: string; text: string; link: string | null; image: string | null };
-export type ShareResult = { added: number; updated: number; rejected: Record<string, number> };
+export type ShareResult = { added: number; updated: number; rejected: Record<string, number>; outcomes?: { ok: boolean; reason?: string; category?: string }[] };
 
 export type Watch = { productId: string; productName: string; targetIls: number | null; baselineIls: number | null; lastNotifiedIls: number | null };
 

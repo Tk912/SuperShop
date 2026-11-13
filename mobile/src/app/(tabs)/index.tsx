@@ -7,6 +7,7 @@ import { api, type HubItem, type HubResponse } from '../../lib/api';
 import { useClubAccounts } from '../../lib/clubAccounts';
 import { useClubs } from '../../lib/clubs';
 import { RLM, useTheme, type Theme } from '../../lib/theme';
+import { useMeta } from '../../lib/useMeta';
 
 // מרכז ההטבות: כל ההטבות על מוצרים (אופנה, נעליים, חשמל, בית...) מכל המועדונים, במקום אחד.
 type Region = 'all' | 'il' | 'intl';
@@ -16,6 +17,7 @@ export default function Hub() {
   const t = useTheme();
   const { myClubs } = useClubs();
   const { accounts } = useClubAccounts();
+  const { meta } = useMeta();
   const mine = useMemo(() => [...new Set([...myClubs, ...Object.keys(accounts)])], [myClubs, accounts]);
 
   const [q, setQ] = useState('');
@@ -88,6 +90,28 @@ export default function Hub() {
             <Chip key={c.id} t={t} on={category === c.id} onPress={() => setCategory(category === c.id ? null : c.id)} label={`${c.name} (${c.count})`} />
           ))}
         </ScrollView>
+      )}
+      {mine.length > 0 && (
+        <View style={[styles.invite, { backgroundColor: t.card, borderColor: t.line, gap: 8 }]}>
+          <Text style={{ color: t.ink, fontWeight: '700' }}>🔑 המועדונים שלי</Text>
+          {mine.map((id) => {
+            const name = meta?.clubs.find((c) => c.id === id)?.name ?? id;
+            const acc = accounts[id];
+            const share = acc?.share;
+            const status = !acc
+              ? 'עוד לא יובאו הטבות – התחברו לחשבון ←'
+              : !share ? `יובאו ${acc.items.length} הטבות · שולח למרכז…`
+                : 'error' in share ? 'השליחה למרכז נכשלה – לפרטים ←'
+                  : `${share.inHub} הטבות על מוצרים במרכז (מתוך ${acc.items.length} שיובאו)`;
+            return (
+              <Pressable key={id} onPress={() => (acc ? router.push('/clubs') : router.push({ pathname: '/club-connect/[id]', params: { id } }))}
+                style={[styles.row, { justifyContent: 'space-between' }]}>
+                <Text style={{ color: t.ink, flexShrink: 1 }} numberOfLines={1}>{name}</Text>
+                <Text style={{ color: !acc || (share && 'error' in share) ? t.brand : t.muted, fontSize: 12, flexShrink: 1 }} numberOfLines={2}>{status}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       )}
       {mine.length > 0 ? (
         <View style={[styles.row, { justifyContent: 'space-between' }]}>

@@ -27,7 +27,7 @@ test('סיווג: רשתות אופנה, נעליים וחשמל – כן; אט�
   const yes = [
     ['20% הנחה בפוקס', 'fashion'], ['פוקס הום 15% על כל החנות', 'home'], ['Castro 25% off', 'fashion'],
     ['10% בקרוקס', 'shoes'], ['8% הנחה ב-KSP על מוצרי חשמל', 'electronics'], ['זוג נעליים שני ב-50%', 'shoes'],
-    ['15% על מצעים ומגבות', 'home'], ['קופון 10$ באמזון', 'general'], ['ג׳ינס סקיני ב-30% הנחה', 'fashion'],
+    ['15% על מצעים ומגבות', 'home'], ['ביליבונג – 20% על כל הקולקציה', 'general'], ['לי קופר: 25% בקנייה באתר הרשת', 'general'], ['קופון 10$ באמזון', 'general'], ['ג׳ינס סקיני ב-30% הנחה', 'fashion'],
   ];
   for (const [title, cat] of yes) {
     const r = C.classify({ title });
@@ -35,7 +35,7 @@ test('סיווג: רשתות אופנה, נעליים וחשמל – כן; אט�
     assert.equal(r.category, cat, title);
   }
   const no = ['30% הנחה בפארק המים', 'לילה במלון באילת ב-20% הנחה', '1+1 על ארוחות במסעדה', 'כרטיסים להופעה ב-₪99',
-    'הנחה לסדנת קרמיקה', '25% על עיסוי בספא', 'כרטיס לקולנוע ב-₪25', 'הטבה מיוחדת לחברי המועדון'];
+    'הנחה לסדנת קרמיקה', '25% על עיסוי בספא', 'כרטיס לקולנוע ב-₪25', 'הטבה מיוחדת לחברי המועדון', 'סופרלנד – 20% בקנייה אונליין של כרטיסים לפארק'];
   for (const title of no) assert.equal(C.classify({ title }).ok, false, title);
 });
 
@@ -68,6 +68,8 @@ test('שיתוף: רק מוצרים נכנסים, מידע אישי נדחה, ק
   assert.equal(r.body.added, 2);
   assert.equal(r.body.rejected.service, 1);
   assert.equal(r.body.rejected.personal, 1);
+  assert.deepEqual(r.body.outcomes.map((o) => o.ok), [true, true, false, false]);
+  assert.equal(r.body.outcomes[2].reason, 'service');
 
   const feed = await fetch(base + '/api/hub').then((x) => x.json());
   const fox = feed.items.find((i) => i.store === 'פוקס');

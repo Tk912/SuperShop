@@ -13,7 +13,8 @@ const ago = (iso: string) => {
 // החשבון שלי במועדון: התחברות (באתר המועדון בתוך האפליקציה), ההטבות שיובאו, חיפוש, סנכרון וניתוק.
 export function ClubAccountSection({ club }: { club: ClubInfo }) {
   const t = useTheme();
-  const { accounts, disconnect, lastShare } = useClubAccounts();
+  const { accounts, disconnect, shareEnabled, reshare } = useClubAccounts();
+  const [filter, setFilter] = useState<'all' | 'in' | 'out'>('all');
   const acc = accounts[club.id];
   const [q, setQ] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -36,7 +37,10 @@ export function ClubAccountSection({ club }: { club: ClubInfo }) {
   }
 
   const term = q.trim().toLowerCase();
-  const items = acc.items.filter((i) => !term || `${i.title} ${i.text}`.toLowerCase().includes(term));
+  const items = acc.items.filter((i) => (!term || `${i.title} ${i.text}`.toLowerCase().includes(term))
+    && (filter === 'all' || (filter === 'in' ? i.hub?.ok : i.hub && !i.hub.ok)));
+  const share = acc.share;
+  const outCount = acc.items.filter((i) => i.hub && !i.hub.ok).length;
   const shown = showAll || term ? items : items.slice(0, 8);
   const matched = acc.items.filter((i) => i.storeId && i.percent).length;
   return (
@@ -45,7 +49,38 @@ export function ClubAccountSection({ club }: { club: ClubInfo }) {
         <Text style={{ color: t.ink, fontWeight: '700', flex: 1 }}>🔑 ההטבות שלי ב{club.name} ({acc.items.length})</Text>
         <Text style={{ color: t.muted, fontSize: 12 }}>סונכרן {ago(acc.syncedAt)}</Text>
       </View>
-      {lastShare[club.id] > 0 && <Text style={{ color: t.good, fontSize: 13 }}>🏷️ {lastShare[club.id]} הטבות על מוצרים מופיעות במרכז ההטבות</Text>}
+      {!shareEnabled ? (
+        <Text style={{ color: t.muted, fontSize: 13 }}>השיתוף במרכז ההטבות כבוי (בתחתית המסך)</Text>
+      ) : !share ? (
+        <Text style={{ color: t.muted, fontSize: 13 }}>⏳ שולח את ההטבות למרכז ההטבות…</Text>
+      ) : 'error' in share ? (
+        <Pressable onPress={() => reshare(club.id)}>
+          <Text style={{ color: t.warn, fontSize: 13 }}>⚠️ ההטבות לא נשלחו למרכז ({share.error}). לחצו לניסיון חוזר</Text>
+        </Pressable>
+      ) : (
+        <View style={{ gap: 2 }}>
+          <Text style={{ color: share.inHub ? t.good : t.warn, fontSize: 13, fontWeight: '700' }}>
+            🏷️ {share.inHub ? `${share.inHub} הטבות על מוצרים מופיעות במרכז ההטבות` : 'אף הטבה מהעמוד לא זוהתה כהטבה על מוצר'}
+          </Text>
+          {outCount > 0 && (
+            <Text style={{ color: t.muted, fontSize: 12 }}>
+              {outCount} לא נכנסו: {[share.rejected.service ? `${share.rejected.service} שירותים/אטרקציות` : null,
+                share.rejected.unknown ? `${share.rejected.unknown} לא זוהו כמוצר` : null,
+                share.rejected.personal ? `${share.rejected.personal} נראו כמידע אישי` : null,
+                share.rejected.empty ? `${share.rejected.empty} ריקות` : null].filter(Boolean).join(' · ')}
+            </Text>
+          )}
+        </View>
+      )}
+      {outCount > 0 && (
+        <View style={[styles.row, { flexWrap: 'wrap' }]}>
+          {([['all', 'הכול'], ['in', 'במרכז ההטבות'], ['out', 'לא נכנסו']] as const).map(([k, label]) => (
+            <Pressable key={k} onPress={() => setFilter(k)} style={[styles.btn, { borderColor: filter === k ? t.brand : t.line, backgroundColor: filter === k ? t.brand : 'transparent' }]}>
+              <Text style={{ color: filter === k ? '#fff' : t.ink, fontSize: 12 }}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       {matched > 0 && <Text style={{ color: t.good, fontSize: 13 }}>✓ {matched} הטבות בחנויות שבהשוואה נכנסות אוטומטית למחיר</Text>}
       {acc.items.length > 5 && (
         <TextInput value={q} onChangeText={setQ} placeholder="חיפוש הטבה (למשל פוקס, מסעדות…)" placeholderTextColor={t.muted}
@@ -56,6 +91,7 @@ export function ClubAccountSection({ club }: { club: ClubInfo }) {
           <Text style={{ color: t.ink, fontWeight: '700' }} numberOfLines={1}>{RLM}{i.title}</Text>
           <Text style={{ color: t.muted, fontSize: 13 }} numberOfLines={3}>{RLM}{i.text}</Text>
           {i.storeId && i.percent ? <Text style={{ color: t.good, fontSize: 12 }}>✓ נכנס למחיר: {i.percent}%{i.minSpend ? ` בקנייה מעל ₪${i.minSpend}` : ''}</Text> : null}
+          {i.hub ? <Text style={{ color: i.hub.ok ? t.good : t.muted, fontSize: 11 }}>{i.hub.ok ? '🏷️ במרכז ההטבות' : i.hub.reason === 'service' ? 'לא במרכז: שירות/אטרקציה' : i.hub.reason === 'unknown' ? 'לא במרכז: לא זוהה כמוצר' : 'לא במרכז'}</Text> : null}
         </Pressable>
       ))}
       {!items.length && <Text style={{ color: t.muted, fontSize: 13 }}>{term ? 'לא נמצאו הטבות בחיפוש.' : 'עוד לא יובאו הטבות. התחברו ועברו לעמוד ההטבות.'}</Text>}

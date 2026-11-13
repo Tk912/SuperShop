@@ -110,8 +110,8 @@ function ClubCard({ club: c, t, connected, onToggle, synced, syncing, onSync }: 
           <Text style={{ color: t.muted, fontSize: 13 }}>{c.description}</Text>
         </View>
         <View style={{ alignItems: 'center' }}>
-          <Switch value={connected} onValueChange={onToggle} trackColor={{ true: t.brand }} accessibilityLabel={`חיבור ${c.name}`} />
-          <Text style={{ color: connected ? t.brand : t.muted, fontSize: 11 }}>{connected ? 'מחובר' : 'לא מחובר'}</Text>
+          <Switch value={connected} onValueChange={onToggle} trackColor={{ true: t.brand }} accessibilityLabel={`אני חבר/ה ב${c.name}`} />
+          <Text style={{ color: connected ? t.brand : t.muted, fontSize: 11 }}>{connected ? 'חבר/ה' : 'לא חבר/ה'}</Text>
         </View>
       </View>
       {c.eligibility ? <Text style={{ color: t.muted, fontSize: 12 }}>זכאות: {c.eligibility}</Text> : null}

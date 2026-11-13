@@ -74,10 +74,12 @@ export function shareDeals(clubId, items, reporter = 'anon') {
   const byId = new Map(db.items.map((i) => [i.id, i]));
   const rep = sha(`${reporter}|hub`);
   const now = new Date().toISOString();
-  const result = { added: 0, updated: 0, rejected: {} };
+  // outcomes: תוצאה לכל פריט, באותו סדר – כדי שהאפליקציה תראה למשתמש מה נכנס למרכז ומה לא (ולמה)
+  const result = { added: 0, updated: 0, rejected: {}, outcomes: [] };
   for (const raw of items.slice(0, 300)) {
     const { item, rejected } = prepareShared(clubId, raw);
-    if (rejected) { result.rejected[rejected] = (result.rejected[rejected] ?? 0) + 1; continue; }
+    if (rejected) { result.rejected[rejected] = (result.rejected[rejected] ?? 0) + 1; result.outcomes.push({ ok: false, reason: rejected }); continue; }
+    result.outcomes.push({ ok: true, category: item.category, store: item.store });
     const prev = byId.get(item.id);
     if (prev) {
       if (prev.hidden) continue;

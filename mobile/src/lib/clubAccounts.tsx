@@ -6,7 +6,11 @@ import type { ClubBenefitItem } from './benefitExtractor';
 // חשבונות מועדון שחוברו באפליקציה: ההטבות שנקראו מאתר המועדון, והעמודים שמהם נקראו (לסנכרון).
 // הכול נשמר רק במכשיר. הסיסמה אף פעם לא עוברת דרך האפליקציה – ההתחברות היא באתר המועדון עצמו.
 // sharedAt: מתי ההטבות שותפו לאחרונה במרכז ההטבות (חנות + הנחה בלבד, בלי שום פרט אישי).
-export type ClubAccount = { connectedAt: string; syncedAt: string; sharedAt?: string; pages: string[]; items: ClubBenefitItem[] };
+// hub: מה קרה להטבה במרכז ההטבות – נכנסה (ok), או נדחתה: service = שירות/אטרקציה, unknown = לא זוהתה כמוצר, personal = נראתה אישית
+export type HubOutcome = { ok: boolean; reason?: string; category?: string };
+export type AccountItem = ClubBenefitItem & { hub?: HubOutcome };
+export type ShareReport = { at: string; inHub: number; rejected: Record<string, number> } | { at: string; error: string };
+export type ClubAccount = { connectedAt: string; syncedAt: string; sharedAt?: string; share?: ShareReport; pages: string[]; items: AccountItem[] };
 const KEY = 'clubAccounts:v1';
 const SHARE_KEY = 'hubShare:v1';
 
@@ -20,8 +24,7 @@ type Ctx = {
   /** שיתוף ההטבות שיובאו במרכז ההטבות לכל המשתמשים (ברירת מחדל: כן). */
   shareEnabled: boolean;
   setShareEnabled: (on: boolean) => void;
-  /** תוצאת השיתוף האחרון לכל מועדון: כמה הטבות על מוצרים נכנסו למרכז */
-  lastShare: Record<string, number>;
+  reshare: (clubId: string) => void;
 };
 const C = createContext<Ctx | null>(null);
 
@@ -30,7 +33,6 @@ export function ClubAccountsProvider({ children }: { children: ReactNode }) {
 
   const [shareEnabled, setShareState] = useState(true);
   const [shareReady, setShareReady] = useState(false); // לא משתפים לפני שידוע אם המשתמש כיבה את השיתוף
-  const [lastShare, setLastShare] = useState<Record<string, number>>({});
   useEffect(() => {
     AsyncStorage.getItem(KEY).then((v) => { if (v) setAccounts(JSON.parse(v)); }).catch(() => {});
     AsyncStorage.getItem(SHARE_KEY).then((v) => { if (v === '0') setShareState(false); }).catch(() => {}).finally(() => setShareReady(true));
@@ -73,12 +75,21 @@ export function ClubAccountsProvider({ children }: { children: ReactNode }) {
       const attempt = `${clubId}|${acc.syncedAt}`;
       if ((acc.sharedAt && acc.sharedAt >= acc.syncedAt) || tried.current.has(attempt) || !acc.items.length) continue;
       tried.current.add(attempt);
-      api.shareDeals(clubId, acc.items.map(({ title, text, link, image }) => ({ title, text, link, image })))
+      const sent = acc.items;
+      api.shareDeals(clubId, sent.map(({ title, text, link, image }) => ({ title, text, link, image })))
         .then((r) => {
-          setLastShare((cur) => ({ ...cur, [clubId]: r.added + r.updated }));
-          update((cur) => (cur[clubId] ? { ...cur, [clubId]: { ...cur[clubId], sharedAt: new Date().toISOString() } } : cur));
+          const byId = new Map(sent.map((i, n) => [i.id, r.outcomes?.[n]]));
+          const at = new Date().toISOString();
+          update((cur) => (cur[clubId] ? { ...cur, [clubId]: {
+            ...cur[clubId], sharedAt: at,
+            share: { at, inHub: r.added + r.updated, rejected: r.rejected },
+            items: cur[clubId].items.map((i) => (byId.get(i.id) ? { ...i, hub: byId.get(i.id) } : i)),
+          } } : cur));
         })
-        .catch(() => {});
+        .catch((e) => {
+          const at = new Date().toISOString();
+          update((cur) => (cur[clubId] ? { ...cur, [clubId]: { ...cur[clubId], share: { at, error: String(e?.message ?? e) } } } : cur));
+        });
     }
   }, [accounts, shareEnabled, shareReady, update]);
 
@@ -94,8 +105,12 @@ export function ClubAccountsProvider({ children }: { children: ReactNode }) {
     return [...best.values()].map((i) => [i.clubId, i.storeId, i.percent, i.minSpend].filter((x) => x != null).join('.')).join(',');
   }, [accounts]);
 
-  const value = useMemo(() => ({ accounts, importPage, disconnect, personalParam, shareEnabled, setShareEnabled, lastShare }),
-    [accounts, importPage, disconnect, personalParam, shareEnabled, setShareEnabled, lastShare]);
+  // שיתוף מחדש (למשל אחרי שגיאת רשת)
+  const reshare = useCallback((clubId: string) => update((cur) => (cur[clubId]
+    ? { ...cur, [clubId]: { ...cur[clubId], sharedAt: undefined, syncedAt: new Date().toISOString() } } : cur)), [update]);
+
+  const value = useMemo(() => ({ accounts, importPage, disconnect, personalParam, shareEnabled, setShareEnabled, reshare }),
+    [accounts, importPage, disconnect, personalParam, shareEnabled, setShareEnabled, reshare]);
   return <C.Provider value={value}>{children}</C.Provider>;
 }
 
